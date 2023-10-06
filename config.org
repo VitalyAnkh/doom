@@ -1343,13 +1343,14 @@ my home machine is pretty safe, and my laptop is shutdown a lot.
 #+end_src
 ** Workaround
 
-#+call: confpkg("!Pkg Workaround")
+#+call: confpkg("!Pkg workaround")
 
 This is a place I put workarounds. It should be empty in the best scenarios.
 
-Test some packages.
-
 #+begin_src emacs-lisp :tangle packages.el
+(package! separate-inline :recipe
+  (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
+(unpin! treemacs)
 (unpin! yasnippet)
 (unpin! citar)
 (unpin! citar-org-roam)
@@ -1376,34 +1377,25 @@ Test some packages.
 (unpin! elisp-tree-sitter)
 (unpin! git-gutter)
 (unpin! code-review)
-(unpin! haskell-mode)
-(package! treemacs :pin "aa0944a29eee48302fd76b6c3a59c5aece114fa6")
 (unpin! lsp-haskell)
 (unpin! lsp-java)
 (unpin! ox-hugo)
 (unpin! lsp-mode)
 (unpin! dap-mode)
 (package! multiple-cursors :disable t)
-(package! separate-inline :recipe
-  (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
 (package! benchmark-init :recipe (:host github :repo "dholm/benchmark-init-el"))
 (package! org-pretty-tags)
 (package! yasnippet)
 (package! org-xlatex :recipe
   (:host github :repo "ksqsf/org-xlatex" :files ("*.el" "*.html")))
 (unpin! yaml)
-(unpin! lsp-treemacs)
 (package! magit :recipe (:branch "main"))
 (package! ghub :recipe (:branch "main"))
 (package! multiple-cursors :disable t)
+;;(unpin! lsp-treemacs)
+;;(unpin! haskell-mode)
 ;;(package! consult-recoll)
-;; (package! emacs-nerd-icons
-;;   :recipe (:type git
-;;            :host github
-;;            :repo "rainstormstudio/emacs-nerd-icons"
-;;            :files ("*.el" "data")))
 #+end_src
-
 
 #+begin_src emacs-lisp :tangle config.el
 (setq tab-line-separator (propertize "▶" 'face  '(inherit 'tab-line-tab-inactive  :foreground  "SeaGreen3")))
@@ -1827,7 +1819,7 @@ ess                          ; emacs speaks statistics
 ;;gdscript                   ; the language you waited for
 (graphql +lsp)             ; Give queries a REST
 (go +lsp +tree-sitter)                    ; the hipster dialect
-(haskell +lsp +tree-sitter)             ; a language that's lazier than I am
+;;(haskell +lsp +tree-sitter)             ; a language that's lazier than I am
 ;;hy                         ; readability of scheme w/ speed of python
 (idris +lsp +tree-sitter)                     ;
 json                         ; At least it ain't XML
@@ -7998,9 +7990,6 @@ moves the point with ~message-goto-<location>~.
 #+call: confpkg("!Pkg LSP")
 
 Programming in Emacs relys on =LSP=: Language Server Protocol. But the lsp client in Emacs has some nuisances. Let's tweak it.
-#+begin_src emacs-lisp :tangle packages.el
-(unpin! lsp-mode)
-#+end_src
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
