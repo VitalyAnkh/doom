@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 #+title: Doom Emacs Configuration
 #+subtitle: The Methods, Management, and Menagerie@@latex:\\@@ of Madness@@latex: --- in meticulous detail@@
-#+author: tecosaur
-#+email: contact@tecosaur.net
+#+author: VitalyR
+#+email: vr@vitalyr.com
 #+date: @@html:<!--@@{{{git-rev}}}@@html:-->@@@@latex:\\\Large\bfseries@@ {{{modification-time(%Y-%m-%d, t)}}} @@latex:\\\normalsize\mdseries@@{{{modification-time(%H:%M, t)}}} @@latex:\acr{\lowercase{@@{{{timezone}}}@@latex:}}\iffalse@@, {{{git-rev}}}@@latex:\fi@@
 #+macro: timezone (eval (substring (shell-command-to-string "date +%Z") 0 -1))
 #+macro: git-rev (eval (format "@@html:<a href=\"https://git.tecosaur.net/tec/emacs-config/commit/%1$s\" style=\"text-decoration: none\"><code style=\"padding: 0; color: var(--text-light); font-size: inherit; opacity: 0.7\">%1$s</code></a>@@@@latex:\\href{https://git.tecosaur.net/tec/emacs-config/commit/%1$s}{\\normalsize\\texttt{%1$s}}@@" (substring (shell-command-to-string "git rev-parse --short HEAD") 0 -1)))
@@ -743,7 +743,7 @@ are needed for each block of config.
       (setq buffer-file-name (plist-get confpkg :file))
       (insert-file-contents buffer-file-name)
       (goto-char (point-min))
-      (while (re-search-forward "^;;; Code:\n[[:space:]\n]*(\\(package!\\|unpin!\\)[[:space:]\n]+\\([^[:space:]]+\\)\\b" nil t)
+      (while (re-search-forward "(\\(package!\\|unpin!\\)[[:space:]\n]+\\([^[:space:]]*\\)" nil t)
         (plist-put confpkg :package-statements
                    (nconc (plist-get confpkg :package-statements)
                           (list (match-string 2))))
@@ -1343,14 +1343,12 @@ my home machine is pretty safe, and my laptop is shutdown a lot.
 #+end_src
 ** Workaround
 
-#+call: confpkg("!Pkg workaround")
+#+call: confpkg("!Pkg Workaround")
 
 This is a place I put workarounds. It should be empty in the best scenarios.
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! separate-inline :recipe
-  (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
-(unpin! treemacs)
+(package! separate-inline :recipe (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
 (unpin! yasnippet)
 (unpin! citar)
 (unpin! citar-org-roam)
@@ -1392,8 +1390,11 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (package! magit :recipe (:branch "main"))
 (package! ghub :recipe (:branch "main"))
 (package! multiple-cursors :disable t)
-;;(unpin! lsp-treemacs)
-;;(unpin! haskell-mode)
+(unpin! lsp-treemacs)
+(unpin! haskell-mode)
+(unpin! treemacs)
+(unpin! treemacs-nerd-icons)
+;; (unpin! dirvish)
 ;;(package! consult-recoll)
 #+end_src
 
@@ -1407,6 +1408,7 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (use-package! global-display-line-numbers-mode
   :hook (prog-mode . global-display-line-numbers-mode)
   :hook (fundamental-mode . global-display-line-numbers-mode)
+  :hook (text-mode . global-display-line-numbers-mode)
   )
 
 (defadvice copilot--complete-post-command (around intercept activate)
@@ -1444,13 +1446,6 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 #+end_src
 
 
-#+begin_src emacs-lisp :tangle config.el
-;; (use-package emacs-nerd-icons
-;;   :custom
-;;   (emacs-nerd-icons-font-family "FiraCode Nerd Font") ;; The Nerd Font you want to use in GUI
-;;   )
-#+end_src
-
 ** Better defaults
 
 #+call: confpkg()
@@ -1481,13 +1476,11 @@ changes Doom makes:
       mouse-drag-and-drop-region-cross-program t
       mouse-1-click-follows-link nil
       server-raise-frame nil
-      display-time-default-load-average nil)      ; I don't think I've ever found this useful
+      display-time-default-load-average nil      ; I don't think I've ever found this useful
+      doom-theme 'doom-one-light)
 
 
 ;; (display-time-mode 1)                             ; Enable time in the mode-line
-
-;; (unless (string-match-p "^Power N/A" (battery))   ; On laptops...
-;;   (display-battery-mode 1))                       ; it's nice to know how much power you have
 
 (global-visual-line-mode 1)                       ; Wrap lines at window edge, not at 80th character: my screen is wide enough!
 
@@ -1507,12 +1500,12 @@ When using a device with a battery, it would be nice to display battery
 
 #+name: battery-status-setup
 #+begin_src emacs-lisp :noweb-ref none
-(require 'battery)
-(if (and battery-status-function
-         (not (equal (alist-get ?L (funcall battery-status-function))
-                     "N/A")))
-    (prin1-to-string `(display-battery-mode 1))
-  "")
+;; (require 'battery)
+;; (if (and battery-status-function
+;;          (not (equal (alist-get ?L (funcall battery-status-function))
+;;                      "N/A")))
+;;     (prin1-to-string `(display-battery-mode 1))
+;;   "")
 #+end_src
 
 Now with noweb we' use the result.
@@ -1681,7 +1674,7 @@ I reckon enabling half the modules Doom provides should do it.
 doom                         ; what makes DOOM look the way it does
 doom-dashboard               ; a nifty splash screen for Emacs
 ;; doom-quit                    ; DOOM quit-message prompts when you quit Emacs
-;; (emoji +unicode)             ; 🙂
+;; emoji                     ; 🙂
 ;;fill-column                ; a `fill-column' indicator
 hl-todo                      ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
 ;;hydra                      ; quick documentation for related commands
@@ -1819,7 +1812,7 @@ ess                          ; emacs speaks statistics
 ;;gdscript                   ; the language you waited for
 (graphql +lsp)             ; Give queries a REST
 (go +lsp +tree-sitter)                    ; the hipster dialect
-;;(haskell +lsp +tree-sitter)             ; a language that's lazier than I am
+(haskell +lsp +tree-sitter)             ; a language that's lazier than I am
 ;;hy                         ; readability of scheme w/ speed of python
 (idris +lsp +tree-sitter)                     ;
 json                         ; At least it ain't XML
@@ -1838,7 +1831,7 @@ json                         ; At least it ain't XML
 lua                          ; one-based indices? one-based indices
 markdown                     ; writing docs for people to ignore
 ;;nim                        ; python + lisp at the speed of c
-;;(nix +lsp)                          ; I hereby declare "nix geht mehr!"
+(nix +lsp)                          ; I hereby declare "nix geht mehr!"
 (ocaml +lsp +tree-sitter)                      ; an objective camel
 (org                         ; organize your plain life in plain text
  +dragndrop                  ; drag & drop files/images into org buffers
@@ -1953,11 +1946,11 @@ trying out JetBrains Mono though. So far I have mixed feelings on it, some
 aspects are nice, but on others I prefer Fira.
 
 #+begin_src emacs-lisp
-(setq doom-font (font-spec :family "JetBrains Mono" :size 24)
-      doom-big-font (font-spec :family "JetBrains Mono" :size 36)
-      doom-variable-pitch-font (font-spec :family "Overpass" :size 26)
-      doom-unicode-font (font-spec :family "JuliaMono")
-      doom-serif-font (font-spec :family "IBM Plex Mono" :size 22 :weight 'light))
+;; (setq doom-font (font-spec :family "JetBrains Mono" :size 24)
+;;       doom-big-font (font-spec :family "JetBrains Mono" :size 36)
+;;       doom-variable-pitch-font (font-spec :family "Overpass" :size 26)
+;;       doom-unicode-font (font-spec :family "JuliaMono")
+;;       doom-serif-font (font-spec :family "IBM Plex Mono" :size 22 :weight 'light))
 (setq doom-font (font-spec :family "JetBrains Mono" :size 14)
       doom-big-font (font-spec :family "JetBrains Mono" :size 28)
       ;;doom-variable-pitch-font (font-spec :family "American Typewriter" :size 21)
@@ -1999,10 +1992,9 @@ apply =doom-emoji-font=, which needs to be done here because it's not /actually/
 Doom font variable, but rather my own addition.
 
 #+begin_src emacs-lisp
-(add-hook! 'after-setting-font-hook
-  (defun +emoji-set-font ()
-    (set-fontset-font t 'emoji doom-emoji-font nil 'prepend)))
-
+;; (add-hook! 'after-setting-font-hook
+;;   (defun +emoji-set-font ()
+;;     (set-fontset-font t 'emoji doom-emoji-font nil 'prepend)))
 #+end_src
 
 We might as well also construct a regexp to make identifying emojis if buffers
@@ -2061,15 +2053,15 @@ that until we have a better use for it (we could also split up the insertion and
 querying commands in other parts of the map).
 
 #+begin_src emacs-lisp
-(when (>= emacs-major-version 29)
-  (map! :leader
-        (:prefix ("e" . "Emoji")
-         :desc "Search" "s" #'emoji-search
-         :desc "Recent" "r" #'emoji-recent
-         :desc "List" "l" #'emoji-list
-         :desc "Describe" "d" #'emoji-describe
-         :desc "Insert" "i" #'emoji-insert
-         :desc "Insert" "e" #'emoji-insert)))
+;; (when (>= emacs-major-version 29)
+;;   (map! :leader
+;;         (:prefix ("e" . "Emoji")
+;;          :desc "Search" "s" #'emoji-search
+;;          :desc "Recent" "r" #'emoji-recent
+;;          :desc "List" "l" #'emoji-list
+;;          :desc "Describe" "d" #'emoji-describe
+;;          :desc "Insert" "i" #'emoji-insert
+;;          :desc "Insert" "e" #'emoji-insert)))
 #+end_src
 
 ***** Checking the system
@@ -2128,8 +2120,8 @@ is a Gnome CLI tool but often present on KDE systems for GTK support.
 #+name: default-theme
 #+begin_src emacs-lisp :noweb-ref none
 (let ((light-theme 'doom-one-light)
-      (dark-theme 'doom-vibrant)
-      (system-light-p
+      (dark-theme 'doom-one-light)
+       (system-light-p
        (and
         (executable-find "gdbus")
         (string= "<<uint32 2>>"
@@ -2149,10 +2141,12 @@ We'll use the appropriate theme as the default, but let's also accept the theme
 as an envvar for fun.
 
 #+begin_src emacs-lisp :noweb yes
-(setq doom-theme
-      (if (getenv "DOOM_THEME")
-          (intern (getenv "DOOM_THEME"))
-        '<<default-theme()>>))
+;; (setq doom-theme
+;;       (if (getenv "DOOM_THEME")
+;;           (intern (getenv "DOOM_THEME"))
+;;         '<<default-theme()>>))
+
+(setq doom-theme 'doom-one-light)
 
 (setq
  doom-themes-enable-bold nil ; if nil, bold is universally disabled
@@ -5270,7 +5264,7 @@ tweaks. Namely:
 
 *** Treemacs
 
-#+call: confpkg("!Pkg treemacs")
+#+call: confpkg("!Pkg Treemacs")
 
 #+begin_quote
 From the =:ui treemacs= module.
@@ -5375,6 +5369,9 @@ Adjust the face of =treemacs=. The =variable-pitch= is too large for a file expl
 (after! (treemacs ace-window)
   (setq aw-ignored-buffers (delete 'treemacs-mode aw-ignored-buffers))
   )
+#+end_src
+*** Dirvish
+#+begin_src emacs-lisp
 #+end_src
 
 ** Frivolities
