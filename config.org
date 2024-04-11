@@ -1393,7 +1393,8 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (unpin! lsp-treemacs)
 (unpin! haskell-mode)
 (unpin! treemacs)
-(unpin! treemacs-nerd-icons)
+(package! treemacs-nerd-icons :disable t)
+;; (unpin! treemacs-nerd-icons)
 ;; (unpin! dirvish)
 ;;(package! consult-recoll)
 #+end_src
@@ -1411,11 +1412,11 @@ This is a place I put workarounds. It should be empty in the best scenarios.
   :hook (text-mode . global-display-line-numbers-mode)
   )
 
-(defadvice copilot--complete-post-command (around intercept activate)
-  (condition-case err
-      ad-do-it
-    ;; Let the debugger run
-    ((debug error) (signal (car err) (cdr err)))))
+;; (defadvice copilot--complete-post-command (around intercept activate)
+;;   (condition-case err
+;;       ad-do-it
+;;     ;; Let the debugger run
+;;     ((debug error) (signal (car err) (cdr err)))))
 
 (setq straight-repository-branch "develop")
 
@@ -1816,16 +1817,16 @@ ess                          ; emacs speaks statistics
 ;;hy                         ; readability of scheme w/ speed of python
 (idris +lsp +tree-sitter)                     ;
 json                         ; At least it ain't XML
-;;(java +lsp)                ; the poster child for carpal tunnel syndrome
-(javascript +lsp)            ; all(hope(abandon(ye(who(enter(here))))))
+(java +lsp +tree-sitter)                  ; the poster child for carpal tunnel syndrome
+(javascript +lsp +tree-sitter)            ; all(hope(abandon(ye(who(enter(here))))))
 (julia +lsp +tree-sitter)                 ; Python, R, and MATLAB in a blender
-;;kotlin                     ; a better, slicker Java(Script)
+(kotlin +lsp +tree-sitter)                      ; a better, slicker Java(Script)
 (latex                       ; writing papers in Emacs has never been so fun
  +lsp
  +latexmk                    ; what else would you use?
  +cdlatex                    ; quick maths symbols
  +fold)                      ; fold the clutter away nicities
-;; (lean +lsp)                       ; proof that mathematicians need help
+;; (lean +lsp)               ; proof that mathematicians need help
 ;;factor                     ; for when scripts are stacked against you
 ;;ledger                     ; an accounting system in Emacs
 lua                          ; one-based indices? one-based indices
@@ -1953,9 +1954,10 @@ aspects are nice, but on others I prefer Fira.
 ;;       doom-serif-font (font-spec :family "IBM Plex Mono" :size 22 :weight 'light))
 (setq doom-font (font-spec :family "JetBrains Mono" :size 14)
       doom-big-font (font-spec :family "JetBrains Mono" :size 28)
-      ;;doom-variable-pitch-font (font-spec :family "American Typewriter" :size 21)
-      doom-variable-pitch-font (font-spec :family "CMU Typewriter Text" :size 17)
-      doom-serif-font (font-spec :family "CMU Typewriter Text" :size 17))
+      ;; doom-symbol-font (font-spec :family "LXGW WenKai" :size 17)
+      doom-variable-pitch-font (font-spec :family "Linux Biolinum" :size 17)
+      ;; doom-variable-pitch-font (font-spec :family "CMU Typewriter Text" :size 17)
+      doom-serif-font (font-spec :family "Linux Biolinum" :size 17))
 
 (add-hook 'after-init-hook (lambda ()
                              ;; Emoji: 😄, 🤦, 🏴󠁧󠁢󠁳󠁣󠁴󠁿
@@ -1969,6 +1971,7 @@ aspects are nice, but on others I prefer Fira.
                              (set-fontset-font "fontset-default" 'symbol "twemoji" nil 'prepend)
                              ;;(set-face-attribute 'default nil :font "Droid Sans Mono")
                              ;; East Asia: 你好, 早晨, こんにちは, 안녕하세요
+                             ;; (set-fontset-font "fontset-default" 'unicode-bmp "LXGW WenKai" nil 'prepend)
                              (set-fontset-font "fontset-default" 'han "LXGW WenKai" nil 'prepend)
                              (set-fontset-font "fontset-default" 'kana "LXGW WenKai" nil 'prepend)
                              (set-fontset-font "fontset-default" 'hangul "LXGW WenKai" nil 'prepend)
@@ -5273,7 +5276,7 @@ From the =:ui treemacs= module.
 Quite often there are superfluous files I'm not that interested in. There's no
 good reason for them to take up space. Let's add a mechanism to ignore them.
 #+begin_src emacs-lisp
-(after! treemacs
+(after! (treemacs dired)
   (defvar treemacs-file-ignore-extensions '()
     "File extension which `treemacs-ignore-filter' will ensure are ignored")
   (defvar treemacs-file-ignore-globs '()
@@ -5796,8 +5799,8 @@ Start =wakatime= at when emacs launches:
 I can't use modal editing without my favorite input method: [[https://fcitx-im.org/][fcitx5]], especially
 within Emacs. Let's add =emacs-smart-input-source= to support smart input method switching.
 #+begin_src emacs-lisp :tangle packages.el
-(package! sis :recipe (:host github :repo "VitalyAnkh/emacs-smart-input-source"
-                           :files ("*.el" ) :branch "staging"))
+(package! sis :recipe (:host github :repo "laishulu/emacs-smart-input-source"
+                           :files ("*.el" )))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -13204,51 +13207,51 @@ Now, there are some symbols that aren't included in =inputenc=, but we should be
 able to handle anyway. For them we define a table of LaTeX translations
 
 #+name: latex-non-ascii-char-substitutions
-| Character | LaTeX |
-|-----------+-------|
-| ɑ         | \(\alpha\) |
-| β          | \(\beta\)  |
-| γ          | \(\gamma\)  |
-| δ          | \(\delta\)  |
-| ε          | \(\epsilon\)  |
-| ϵ          | \(\varepsilon\)  |
-| ζ          | \(\zeta\)  |
-| η         | \(\eta\) |
-| θ          | \(\theta\)  |
-| ϑ         | \(\vartheta\) |
-| ι          | \(\iota\)  |
-| κ         | \(\kappa\) |
-| λ          | \(\lambda\)  |
-| μ         | \(\mu\) |
-| ν          | \(\nu\)  |
-| ξ          | \(\xi\)  |
-| π         | \(\pi\) |
-| ϖ         | \(\varpi\) |
-| ρ          | \(\rho\)  |
-| ϱ         | \(\varrho\) |
-| σ         | \(\sigma\) |
-| ς          | \(\varsigma\)  |
-| τ          | \(\tau\)  |
-| υ          | \(\upsilon\)  |
+| Character | LaTeX  |
+|-----------+--------|
+| ɑ         | \(\alpha\)  |
+| β         | \(\beta\)  |
+| γ         | \(\gamma\)  |
+| δ         | \(\delta\)  |
+| ε         | \(\epsilon\)  |
+| ϵ         | \(\varepsilon\)  |
+| ζ         | \(\zeta\)  |
+| η         | \(\eta\)  |
+| θ         | \(\theta\)  |
+| ϑ        | \(\vartheta\) |
+| ι         | \(\iota\)  |
+| κ         | \(\kappa\)  |
+| λ         | \(\lambda\)  |
+| μ         | \(\mu\)  |
+| ν         | \(\nu\)  |
+| ξ         | \(\xi\)  |
+| π         | \(\pi\)  |
+| ϖ         | \(\varpi\)  |
+| ρ         | \(\rho\)  |
+| ϱ         | \(\varrho\)  |
+| σ         | \(\sigma\)  |
+| ς         | \(\varsigma\)  |
+| τ         | \(\tau\)  |
+| υ         | \(\upsilon\)  |
 | ϕ         | \(\phi\) |
-| φ         | \(\varphi\) |
-| ψ         | \(\psi\) |
-| ω         | \(\omega\) |
-| Γ         | \(\Gamma\) |
-| Δ         | \(\Delta\) |
-| Θ         | \(\Theta\) |
-| Λ         | \(\Lambda\) |
-| Ξ         | \(\Xi\) |
-| Π         | \(\Pi\) |
-| Σ         | \(\Sigma\) |
-| Υ         | \(\Upsilon\) |
-| Φ         | \(\Phi\) |
-| Ψ         | \(\Psi\) |
-| Ω         | \(\Omega\) |
-| א         | \(\aleph\)  |
-| ב         | \(\beth\) |
+| φ         | \(\varphi\)  |
+| ψ         | \(\psi\)  |
+| ω         | \(\omega\)  |
+| Γ         | \(\Gamma\)  |
+| Δ         | \(\Delta\)  |
+| Θ         | \(\Theta\)  |
+| Λ         | \(\Lambda\)  |
+| Ξ         | \(\Xi\)  |
+| Π         | \(\Pi\)  |
+| Σ         | \(\Sigma\)  |
+| Υ         | \(\Upsilon\)  |
+| Φ         | \(\Phi\)  |
+| Ψ         | \(\Psi\)  |
+| Ω         | \(\Omega\)  |
+| א        | \(\aleph\) |
+| ב         | \(\beth\)  |
 | ד         | \(\daleth\) |
-| ג          | \(\gimel\)  |
+| ג         | \(\gimel\)  |
 
 #+name: gen-latex-non-ascii-char-substitutions
 #+begin_src emacs-lisp :noweb-ref none :var latex-non-ascii-char-substitutions=latex-non-ascii-char-substitutions
