@@ -1721,8 +1721,8 @@ I reckon enabling half the modules Doom provides should do it.
 
 #+name: doom-completion
 #+begin_src emacs-lisp
-;; company                   ; the ultimate code completion backend
-(corfu +orderless +dabbrev)  ; complete with cap(f), cape and a flying feather!
+company                   ; the ultimate code completion backend
+;; (corfu +orderless +dabbrev)  ; complete with cap(f), cape and a flying feather!
 ;;helm                       ; the *other* search engine for love and life
 ;;ido                        ; the other *other* search engine...
 ;; (ivy                      ; a search engine for love and life
@@ -4523,7 +4523,7 @@ tweaks.
 (use-package! jinx
   :defer t
   :init
-  ;; (add-hook 'doom-init-ui-hook #'global-jinx-mode)
+  (add-hook 'doom-init-ui-hook #'global-jinx-mode)
   :config
   ;; Use my custom dictionary
   (setq jinx-languages "en-custom")
@@ -4533,9 +4533,9 @@ tweaks.
   ;; Take over the relevant bindings.
   (after! ispell
     (global-set-key [remap ispell-word] #'jinx-correct))
-  (after! evil-commands
-    (global-set-key [remap evil-next-flyspell-error] #'jinx-next)
-    (global-set-key [remap evil-prev-flyspell-error] #'jinx-previous))
+  ;; (after! evil-commands
+  ;;   (global-set-key [remap evil-next-flyspell-error] #'jinx-next)
+  ;;   (global-set-key [remap evil-prev-flyspell-error] #'jinx-previous))
   ;; I prefer for `point' to end up at the start of the word,
   ;; not just after the end.
   (advice-add 'jinx-next :after (lambda (_) (left-word))))
@@ -4549,7 +4549,7 @@ I used to have a small collection of configuration here, but then it grew
 larger, and now it's a package.
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! autocorrect :recipe (:local-repo "lisp/autocorrect"))
+(package! autocorrect :recipe (:host github :repo "tecosaur/autocorrect"))
 #+end_src
 
 To integrate Jinx with the =autocorrect= package, we need to tell it:
@@ -4598,11 +4598,12 @@ To integrate Jinx with the =autocorrect= package, we need to tell it:
   (run-with-idle-timer 0.5 nil #'autocorrect-setup)
 
   ;; Make work with evil-mode
-  (evil-collection-set-readonly-bindings 'autocorrect-list-mode-map)
-  (evil-collection-define-key 'normal 'autocorrect-list-mode-map
-    (kbd "a") #'autocorrect-create-correction
-    (kbd "x") #'autocorrect-remove-correction
-    (kbd "i") #'autocorrect-ignore-word))
+  ;; (evil-collection-set-readonly-bindings 'autocorrect-list-mode-map)
+  ;; (evil-collection-define-key 'normal 'autocorrect-list-mode-map
+  ;;   (kbd "a") #'autocorrect-create-correction
+  ;;   (kbd "x") #'autocorrect-remove-correction
+  ;;   (kbd "i") #'autocorrect-ignore-word)
+  )
 #+end_src
 
 **** Downloading dictionaries
@@ -5021,8 +5022,7 @@ be nice to know what I'm listening to. We can put this information in the
 modeline with my media player package.
 
 #+begin_src emacs-lisp :tangle packages.el :noweb-ref none
-(package! doom-modeline-media-player
-  :recipe (:local-repo "lisp/doom-modeline-media-player"))
+(package! doom-modeline-media-player :recipe (:local-repo "lisp/doom-modeline-media-player"))
 #+end_src
 
 To enable the lazy loading, we make =doom-modeline= aware of the segment function
