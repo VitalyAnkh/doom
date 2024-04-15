@@ -1465,6 +1465,8 @@ changes Doom makes:
  ;; x-stretch-cursor t
  )                              ; Stretch cursor to the glyph width
 
+(setq shell-file-name (executable-find "fish"))
+
 (setq undo-limit 80000000                         ; Raise undo-limit to 80Mb
       ;; TODO: find an equivalent for Emacs?
       ;; evil-want-fine-undo t                       ; By default while in insert all changes are one big blob. Be more granular
@@ -1814,8 +1816,8 @@ vc                           ; version-control and Emacs, sitting in a tree
 ;; ansible                      ; a crucible for infrastructure as code
 biblio                       ; Writes a PhD for you (citation needed)
 debugger                   ; FIXME stepping through code, to help you add bugs
-direnv                     ; be direct about your environment
-;; docker                       ; port everything to containers
+;; direnv                     ; be direct about your environment
+docker                       ; port everything to containers
 editorconfig               ; let someone else argue about tabs vs spaces
 ein                        ; tame Jupyter notebooks with emacs
 (eval +overlay)              ; run code, run (also, repls)
@@ -1894,7 +1896,7 @@ json                         ; At least it ain't XML
 lua                          ; one-based indices? one-based indices
 markdown                     ; writing docs for people to ignore
 ;;nim                        ; python + lisp at the speed of c
-(nix +lsp)                          ; I hereby declare "nix geht mehr!"
+(nix +lsp +tree-sitter)                          ; I hereby declare "nix geht mehr!"
 (ocaml +lsp +tree-sitter)                      ; an objective camel
 (org                         ; organize your plain life in plain text
  +dragndrop                  ; drag & drop files/images into org buffers
@@ -1910,11 +1912,11 @@ markdown                     ; writing docs for people to ignore
 ;; plantuml                   ; diagrams for confusing people more
 ;;purescript                 ; javascript, but functional
 (python +lsp +pyright)       ; beautiful is better than ugly
-;;qt                         ; the 'cutest' gui framework ever
+(qt +lsp +tree-sitter)                         ; the 'cutest' gui framework ever
 (racket +lsp +tree-sitter)                    ; a DSL for DSLs
 (raku +lsp +tree-sitter)                      ; the artist formerly known as perl6
 rest                       ; Emacs as a REST client
-;;rst                        ; ReST in peace
+rst                        ; ReST in peace
 (ruby +rails +tree-sitter)              ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
 (rust +lsp +tree-sitter)                  ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
 (scala +lsp +tree-sitter)                      ; java, but good
@@ -4523,7 +4525,7 @@ tweaks.
 (use-package! jinx
   :defer t
   :init
-  (add-hook 'doom-init-ui-hook #'global-jinx-mode)
+  ;; (add-hook 'doom-init-ui-hook #'global-jinx-mode)
   :config
   ;; Use my custom dictionary
   (setq jinx-languages "en-custom")
@@ -8259,6 +8261,7 @@ Autoload =f90-mode= on =cuf= / =CUF= files.
             c++-mode
             c-mode
             f90-mode
+            javascript-mode
             org-msg-edit-mode)) ; doesn't need a formatter
 #+end_src
 ** CUDA
