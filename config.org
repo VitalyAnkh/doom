@@ -2016,12 +2016,11 @@ aspects are nice, but on others I prefer Fira.
 ;;       doom-unicode-font (font-spec :family "JuliaMono")
 ;;       doom-serif-font (font-spec :family "IBM Plex Mono" :size 22 :weight 'light))
 (setq doom-font (font-spec :family "JetBrains Mono" :size 14)
-      doom-big-font (font-spec :family "JetBrains Mono" :size 28)
+      doom-big-font (font-spec :family "JetBrains Mono" :size 25)
       ;; doom-symbol-font (font-spec :family "LXGW WenKai" :size 17)
-      doom-variable-pitch-font (font-spec :family "Linux Biolinum" :size 17)
+      doom-variable-pitch-font (font-spec :family "Linux Biolinum" :size 15)
       ;; doom-variable-pitch-font (font-spec :family "CMU Typewriter Text" :size 17)
-      doom-serif-font (font-spec :family "Linux Biolinum" :size 17))
-
+      doom-serif-font (font-spec :family "Linux Biolinum" :size 15))
 
 (add-hook 'after-init-hook (lambda ()
                              ;; Emoji: 😄, 🤦, 🏴󠁧󠁢󠁳󠁣󠁴󠁿
@@ -3648,6 +3647,20 @@ Now let's just have this included when an ErgoDox is found via =dmesg=.
 <<avy-detect-colemak()>>
 #+end_src
 
+#+begin_src emacs-lisp
+(use-package avy
+  :config
+  (setq avy-keys '(?n ?e ?i ?s ?t ?r ?i ?a))
+  (keymap-global-set "M-n"  'avy-goto-char-2)
+  ;; unbind org-cycle-agenda-files from org-mode-map
+  (map! :after org
+      :map org-mode-map
+      "M-n" #'avy-goto-char-2)
+  (map! :after consult
+      "M-n" #'avy-goto-char-2)
+)
+#+end_src
+
 *** Rotate (window management)
 #+call: confpkg("!Pkg Rotate")
 
@@ -3777,6 +3790,10 @@ like to locate in my Doom config folder.
 (use-package embark
   :config
   (keymap-global-set "C-," 'embark-act)
+  ;; unbind org-cycle-agenda-files from org-mode-map
+  (map! :after org
+        :map org-mode-map
+        "C-," #'embark-act)
   ;; TODO: this doesn't work
   ;; file one wayland to open a file with external programs
   ;; (map minibuffer-local-map
@@ -5576,13 +5593,13 @@ Adjust the face of =treemacs=. The =variable-pitch= is too large for a file expl
 (use-package treemacs
   :config
   (setq
-   treemacs-file-event-delay 1000
+   treemacs-file-event-delay 100
    treemacs-follow-after-init t
-   treemacs-file-follow-delay 0.1
+   treemacs-file-follow-delay 0.01
    treemacs-indentation 1
    treemacs-recenter-after-file-follow t
    treemacs-recenter-after-tag-follow t
-   treemacs-text-scale -1.1
+   treemacs-text-scale -2
    treemacs-follow-mode t
    treemacs-width 35
    )
@@ -6341,7 +6358,7 @@ currently playing media.
     '(workspace-name window-number nov-author nov-title nov-current-page scroll-percentage-subtle)
     '(media-player misc-info major-mode time))
 
-;;   (add-to-list 'doom-modeline-mode-alist '(nov-mode . nov)))
+  (add-to-list 'doom-modeline-mode-alist '(nov-mode . nov)))
 #+end_src
 
 ** Calculator
@@ -10606,8 +10623,8 @@ let's make it transparent.
 We can either render from a ~dvi~ or ~pdf~ file, so let's benchmark ~latex~ and
 ~pdflatex~.
 | ~latex~ time | ~pdflatex~ time |
-|------------+---------------|
-| 135 \pm 2 ms | 215 \pm 3 ms    |
+|------------+----------------|
+| 135 \pm 2 ms | 215 \pm 3 ms     |
 
 On the rendering side, there are two ~.dvi~-to-image converters which I am
 interested in: ~dvipng~ and ~dvisvgm~.
@@ -10618,10 +10635,10 @@ Using the above latex expression and benchmarking lead to the following results:
 | 89 \pm 2 ms   | 178 \pm 2 ms   | 12 \pm 2 ms    |
 
 Now let's combine this to see what's best
-| Tool chain         | Total time | Resulting file size |
-|--------------------+------------+---------------------|
-| ~latex~ + ~dvipng~     | 226 \pm 2 ms | 7 KiB               |
-| ~latex~ + ~dvisvgm~    | 392 \pm 4 ms | 8 KiB               |
+| Tool chain          | Total time | Resulting file size |
+|---------------------+------------+---------------------|
+| ~latex~ + ~dvipng~      | 226 \pm 2 ms | 7 KiB               |
+| ~latex~ + ~dvisvgm~     | 392 \pm 4 ms | 8 KiB               |
 | ~pdflatex~ + ~pdf2svg~ | 230 \pm 2 ms | 16 KiB              |
 
 So, let's use ~dvipng~ for previewing LaTeX fragments in-Emacs, but ~dvisvgm~ for [[LaTeX Rendering]].
@@ -13792,11 +13809,11 @@ For how I've setup Org's LaTeX export, the following packages are needed:
 | amsmath    | A near-essential maths package                        |
 | booktabs   | Nice horizontal lines in tables                       |
 | cancel     | Cancel terms in equations                             |
-| capt-of    | Captions outside floats                               |
+| capt-of    | Captions outside floats                              |
 | caption    | Finer control over captions                           |
 | cleveref   | Easy cross-referencing                                |
 | embedall   | Embed files in the document                           |
-| float      | Floating environments                                 |
+| float     | Floating environments                                 |
 | fontenc    | Font encodings                                        |
 | fvextra    | Enhanced verbatim environments                        |
 | graphicx   | An extended graphics package                          |
@@ -13812,7 +13829,7 @@ For how I've setup Org's LaTeX export, the following packages are needed:
 | preview    | Needed for AUCTeX and ob-latex                        |
 | scrbase    | KOMA classes and more                                 |
 | siunitx    | Proper unit support                                   |
-| soul       | Strikethrough and underline, flexibly                 |
+| soul       | Strikethrough and underline, flexibly                |
 | subcaption | Form subfigures and subcaptions                       |
 | svg        | Insert SVG images                                     |
 | tikz       | Generally handy, as a dependancy and for graphics     |
