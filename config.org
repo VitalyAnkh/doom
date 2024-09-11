@@ -1816,8 +1816,9 @@ vc                           ; version-control and Emacs, sitting in a tree
 #+begin_src emacs-lisp
 ;; ansible                      ; a crucible for infrastructure as code
 biblio                       ; Writes a PhD for you (citation needed)
-debugger                   ; FIXME stepping through code, to help you add bugs
-;; direnv                     ; be direct about your environment
+;;collab                     ; buffers with friends
+debugger                     ; FIXME stepping through code, to help you add bugs
+;;direnv                     ; be direct about your environment
 docker                       ; port everything to containers
 editorconfig               ; let someone else argue about tabs vs spaces
 ein                        ; tame Jupyter notebooks with emacs
@@ -1827,7 +1828,6 @@ ein                        ; tame Jupyter notebooks with emacs
  ;; +dictionary                 ; dictionary/thesaurus is nice
  +docsets)                   ; ...or in Dash docsets locally
 lsp                          ; Language Server Protocol
-;;macos                      ; MacOS-specific commands
 (magit                       ; a git porcelain for Emacs
  ;;+forge
  )                     ; interface with git forges
@@ -1835,14 +1835,17 @@ make                         ; run make tasks from Emacs
 ;;pass                       ; password manager for nerds
 pdf                          ; pdf enhancements
 ;;prodigy                    ; FIXME managing external services & code builders
-;; terraform                  ; infrastructure as code
-;;tmux                       ; an API for interacting with tmux
-tree-sitter                ; syntax and parsing, sitting in a tree...
+;;rgb                          ; creating color strings
+;;taskrunner                 ; taskrunner for all your projects
+;;terraform                  ; infrastructure as code
+tmux                         ; an API for interacting with tmux
+tree-sitter                  ; syntax and parsing, sitting in a tree...
 upload                       ; map local to remote projects via ssh/ftp
 #+end_src
 
 #+name: doom-os
 #+begin_src emacs-lisp
+(:if (featurep :system 'macos) macos) ; improve compatibility with macOS
 tty                          ; improve the terminal Emacs experience
 #+end_src
 
@@ -10552,7 +10555,7 @@ While we're at it we may as well make tags prettier as well 🙂
 
 First off, we want those fragments to look good.
 #+begin_src emacs-lisp
-(setq org-highlight-latex-and-related '(native script entities))
+(setq org-highlight-latex-and-related '(latex script entities))
 #+end_src
 
 However, by using =native= highlighting the =org-block= face is added, and that
@@ -14636,6 +14639,14 @@ In case of Emacs28:
 #+begin_src emacs-lisp
 (when (>= emacs-major-version 28)
   (add-hook 'latex-mode-hook #'TeX-latex-mode))
+#+end_src
+
+With Emacs 29.4
+
+#+begin_src emacs-lisp
+(when (and (= emacs-major-version 29) (= emacs-minor-version 4))
+  (after! auctex ; See <https://github.com/minad/vertico/discussions/475>
+    (fmakunbound 'ConTeXt-mode)))
 #+end_src
 
 ** Python
