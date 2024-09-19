@@ -1747,7 +1747,7 @@ hl-todo                      ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
 ;;indent-guides              ; highlighted indent columns, notoriously slow
 (ligatures
  ;;+extra
- )           ; ligatures and symbols to make your code pretty again
+)           ; ligatures and symbols to make your code pretty again
 ;;minimap                    ; show a map of the code on the side
 modeline                     ; snazzy, Atom-inspired modeline, plus API
 ;; nav-flash                    ; blink the current line after jumping
@@ -1756,8 +1756,8 @@ ophints                      ; highlight the region an operation acts on
 (popup                       ; tame sudden yet inevitable temporary windows
  +all                        ; catch all popups that start with an asterix
  +defaults)                  ; default popup rules
-(tabs                      ; an tab bar for Emacs
- +centaur-tabs)           ; ... with prettier tabs
+(tabs                        ; an tab bar for Emacs
+ +centaur-tabs)              ; ... with prettier tabs
 treemacs                     ; a project drawer, like neotree but cooler
 ;;unicode                    ; extended unicode support for various languages
 (vc-gutter +pretty)          ; vcs diff in the fringe
@@ -1789,7 +1789,7 @@ word-wrap                  ; soft wrapping with language-aware indent
 #+begin_src emacs-lisp
 (dired
  +dirvish
- ;;+icons
+ +icons
  )               ; making dired pretty [functional]
 electric                     ; smarter, keyword-based electric-indent
 (ibuffer +icons)             ; interactive buffer management
@@ -1802,7 +1802,7 @@ vc                           ; version-control and Emacs, sitting in a tree
 ;;eshell                     ; the elisp shell that works everywhere
 ;;shell                      ; simple shell REPL for Emacs
 ;;term                       ; basic terminal emulator for Emacs
-;; vterm                        ; the best terminal emulation in Emacs
+;;vterm                        ; the best terminal emulation in Emacs
 #+end_src
 
 #+name: doom-checkers
@@ -1864,7 +1864,7 @@ associated file.
 common-lisp                ; if you've seen one lisp, you've seen them all
 coq                        ; proofs-as-programs
 ;;crystal                    ; ruby at the speed of c
-;;csharp                     ; unity, .NET, and mono shenanigans
+(csharp +lsp +tree-sitter)                     ; unity, .NET, and mono shenanigans
 data                         ; config/data formats
 (dart +flutter)            ; paint ui and not much else
 ;;dhall                      ; JSON with FP sprinkles
@@ -1876,7 +1876,7 @@ ess                          ; emacs speaks statistics
 ;;faust                      ; dsp, but you get to keep your soul
 ;;fsharp                     ; ML stands for Microsoft's Language
 ;;fstar                      ; (dependent) types and (monadic) effects and Z3
-;;gdscript                   ; the language you waited for
+(gdscript +lsp +tree-sistter)                   ; the language you waited for
 (graphql +lsp)             ; Give queries a REST
 (go +lsp +tree-sitter)                    ; the hipster dialect
 (haskell +lsp +tree-sitter)             ; a language that's lazier than I am
@@ -1919,7 +1919,7 @@ markdown                     ; writing docs for people to ignore
 (raku +lsp +tree-sitter)                      ; the artist formerly known as perl6
 rest                       ; Emacs as a REST client
 rst                        ; ReST in peace
-(ruby +rails +tree-sitter)              ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
+;; (ruby +rails +tree-sitter)              ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
 (rust +lsp +tree-sitter)                  ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
 (scala +lsp +tree-sitter)                      ; java, but good
 scheme                       ; a fully conniving family of lisps
