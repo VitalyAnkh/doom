@@ -4,9 +4,9 @@
 ;;
 ;; Author: TEC <https://code.tecosaur.net/tec>
 ;; Maintainer: TEC <contact@tecosaur.net>
-;; Created: 十一月 22, 2024
-;; Modified: 十一月 22, 2024
-;; Version: 2024.11.22
+;; Created: 十二月 16, 2024
+;; Modified: 十二月 16, 2024
+;; Version: 2024.12.16
 ;; Homepage: https://code.tecosaur.net/tec/emacs-config
 ;; Package-Requires: ((emacs "29.1"))
 ;;
@@ -202,19 +202,17 @@
    '("z" . meow-pop-selection)
    '("'" . repeat)
    '("\\" . quoted-insert)
-   ;;TODO: for C-[ translate to ESC, this doesn't work
-   ;;'("ESC" . meow-insert-exit)
-   ;;'("<escape>" . meow-insert-exit)
    )
 
   (setq meow-expand-exclude-mode-list nil)
   (setq meow-expand-hint-remove-delay 1024)
   ;; TODO: replace define-key with keymap-set
-  (define-key input-decode-map (kbd "C-[") [control-bracketleft])
-  (define-key meow-insert-state-keymap [control-bracketleft] 'meow-insert-exit)
+  (when window-system
+    (define-key input-decode-map (kbd "C-[") [control-bracketleft])
+    (define-key meow-insert-state-keymap [control-bracketleft] 'meow-insert-exit)
+  )
   ;; (meow-define-keys 'insert
   ;;   '("ESC" . meow-insert-exit))
-
   ;; (keymap-set input-decode-map "C-[" 'meow-insert-exit)
   ;; (keymap-set meow-insert-state-keymap "C-[" 'meow-insert-exit)
 

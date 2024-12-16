@@ -4127,19 +4127,17 @@ Modal editing on wish! Use =moew= for modal life.
    '("z" . meow-pop-selection)
    '("'" . repeat)
    '("\\" . quoted-insert)
-   ;;TODO: for C-[ translate to ESC, this doesn't work
-   ;;'("ESC" . meow-insert-exit)
-   ;;'("<escape>" . meow-insert-exit)
    )
 
   (setq meow-expand-exclude-mode-list nil)
   (setq meow-expand-hint-remove-delay 1024)
   ;; TODO: replace define-key with keymap-set
-  (define-key input-decode-map (kbd "C-[") [control-bracketleft])
-  (define-key meow-insert-state-keymap [control-bracketleft] 'meow-insert-exit)
+  (when window-system
+    (define-key input-decode-map (kbd "C-[") [control-bracketleft])
+    (define-key meow-insert-state-keymap [control-bracketleft] 'meow-insert-exit)
+  )
   ;; (meow-define-keys 'insert
   ;;   '("ESC" . meow-insert-exit))
-
   ;; (keymap-set input-decode-map "C-[" 'meow-insert-exit)
   ;; (keymap-set meow-insert-state-keymap "C-[" 'meow-insert-exit)
 
@@ -10628,8 +10626,8 @@ let's make it transparent.
 We can either render from a ~dvi~ or ~pdf~ file, so let's benchmark ~latex~ and
 ~pdflatex~.
 | ~latex~ time | ~pdflatex~ time |
-|------------+----------------|
-| 135 \pm 2 ms | 215 \pm 3 ms     |
+|------------+---------------|
+| 135 \pm 2 ms | 215 \pm 3 ms    |
 
 On the rendering side, there are two ~.dvi~-to-image converters which I am
 interested in: ~dvipng~ and ~dvisvgm~.
@@ -10640,10 +10638,10 @@ Using the above latex expression and benchmarking lead to the following results:
 | 89 \pm 2 ms   | 178 \pm 2 ms   | 12 \pm 2 ms    |
 
 Now let's combine this to see what's best
-| Tool chain          | Total time | Resulting file size |
-|---------------------+------------+---------------------|
-| ~latex~ + ~dvipng~      | 226 \pm 2 ms | 7 KiB               |
-| ~latex~ + ~dvisvgm~     | 392 \pm 4 ms | 8 KiB               |
+| Tool chain         | Total time | Resulting file size |
+|--------------------+------------+---------------------|
+| ~latex~ + ~dvipng~     | 226 \pm 2 ms | 7 KiB               |
+| ~latex~ + ~dvisvgm~    | 392 \pm 4 ms | 8 KiB               |
 | ~pdflatex~ + ~pdf2svg~ | 230 \pm 2 ms | 16 KiB              |
 
 So, let's use ~dvipng~ for previewing LaTeX fragments in-Emacs, but ~dvisvgm~ for [[LaTeX Rendering]].
@@ -13652,7 +13650,7 @@ able to handle anyway. For them we define a table of LaTeX translations
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι         | \(\iota\)       |
+| ι          | \(\iota\)        |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
@@ -13814,11 +13812,11 @@ For how I've setup Org's LaTeX export, the following packages are needed:
 | amsmath    | A near-essential maths package                        |
 | booktabs   | Nice horizontal lines in tables                       |
 | cancel     | Cancel terms in equations                             |
-| capt-of    | Captions outside floats                              |
+| capt-of    | Captions outside floats                               |
 | caption    | Finer control over captions                           |
 | cleveref   | Easy cross-referencing                                |
 | embedall   | Embed files in the document                           |
-| float     | Floating environments                                 |
+| float      | Floating environments                                 |
 | fontenc    | Font encodings                                        |
 | fvextra    | Enhanced verbatim environments                        |
 | graphicx   | An extended graphics package                          |
@@ -13834,7 +13832,7 @@ For how I've setup Org's LaTeX export, the following packages are needed:
 | preview    | Needed for AUCTeX and ob-latex                        |
 | scrbase    | KOMA classes and more                                 |
 | siunitx    | Proper unit support                                   |
-| soul       | Strikethrough and underline, flexibly                |
+| soul       | Strikethrough and underline, flexibly                 |
 | subcaption | Form subfigures and subcaptions                       |
 | svg        | Insert SVG images                                     |
 | tikz       | Generally handy, as a dependancy and for graphics     |

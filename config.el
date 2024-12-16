@@ -3,7 +3,7 @@
 ;; SPDX-FileCopyrightText: © 2020-2024 VitalyR <vr@vitalyr.com>
 ;; SPDX-License-Identifier: MIT
 
-;; Generated at 2024-11-22T03:28:49+0800 from the literate configuration.
+;; Generated at 2024-12-16T17:30:09+0800 from the literate configuration.
 
 (add-to-list 'load-path "~/.config/doom/subconf/")
 
@@ -1562,19 +1562,17 @@ nil
    '("z" . meow-pop-selection)
    '("'" . repeat)
    '("\\" . quoted-insert)
-   ;;TODO: for C-[ translate to ESC, this doesn't work
-   ;;'("ESC" . meow-insert-exit)
-   ;;'("<escape>" . meow-insert-exit)
    )
 
   (setq meow-expand-exclude-mode-list nil)
   (setq meow-expand-hint-remove-delay 1024)
   ;; TODO: replace define-key with keymap-set
-  (define-key input-decode-map (kbd "C-[") [control-bracketleft])
-  (define-key meow-insert-state-keymap [control-bracketleft] 'meow-insert-exit)
+  (when window-system
+    (define-key input-decode-map (kbd "C-[") [control-bracketleft])
+    (define-key meow-insert-state-keymap [control-bracketleft] 'meow-insert-exit)
+  )
   ;; (meow-define-keys 'insert
   ;;   '("ESC" . meow-insert-exit))
-
   ;; (keymap-set input-decode-map "C-[" 'meow-insert-exit)
   ;; (keymap-set meow-insert-state-keymap "C-[" 'meow-insert-exit)
 
