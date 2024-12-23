@@ -4449,7 +4449,7 @@ available on any an elisp archives. Thankfully most Emacs package managers make
 using Git repository URLs pretty easy these days.
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! mpris :recipe (:local-repo "lisp/mpris"))
+(package! mpris :recipe (:host nil :repo "https://code.tecosaur.net/tec/mpris.el.git"))
 #+end_src
 
 *** Smerge
@@ -5080,7 +5080,7 @@ be nice to know what I'm listening to. We can put this information in the
 modeline with my media player package.
 
 #+begin_src emacs-lisp :tangle packages.el :noweb-ref none
-(package! doom-modeline-media-player :recipe (:local-repo "lisp/doom-modeline-media-player"))
+(package! doom-modeline-media-player :recipe (:host nil :repo "https://code.tecosaur.net/tec/doom-modeline-media-player.git"))
 #+end_src
 
 To enable the lazy loading, we make =doom-modeline= aware of the segment function

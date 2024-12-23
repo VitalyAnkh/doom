@@ -32,6 +32,3 @@ ln -s ~/.local/share/go/bin/goimapnotify ~/.local/bin/
 update-desktop-database ~/.local/share/applications
 
 xdg-mime default emacs.desktop text/org
-
-# for vitalyr, run this in $DOOMDIR:
-emacs --batch --eval "(progn (require 'org) (setq org-confirm-babel-evaluate nil) (org-babel-tangle-file \"~/.config/doom/config.org\"))"
