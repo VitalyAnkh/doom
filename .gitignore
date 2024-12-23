@@ -1,10 +1,19 @@
 .*
+!.gitignore
 !.dir-locals.el
 _minted-config
+abbrev.el
+config.*
 !config.org
+doctor.el
+init.el
+packages.el
 cli.el
 setup.sh
 
 !publish
 !publish/config.html
 
+!.github
+
+subconf/*

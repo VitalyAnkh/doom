@@ -4199,7 +4199,11 @@ GitHub Copilot is awesome!
 #+begin_src emacs-lisp
 (use-package! gptel
   :commands gptel gptel-menu gptel-mode gptel-send gptel-set-tpic
+  :custom
+  (gptel-temperature 0.2)
   :config
+  (setq auth-sources '("~/.authinfo"))
+  (setq gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev"))
   (let (ollama-models)
     (when (executable-find "ollama")
       (with-temp-buffer
@@ -4209,11 +4213,18 @@ GitHub Copilot is awesome!
         (while (and (not (eobp)) (looking-at "[^ \t]+"))
           (push (match-string 0) ollama-models)
           (forward-line 1))))
-    (setq-default gptel-model "nous-hermes2:latest"
-                  gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
+    (setq-default gptel-model 'gemini-2.0-flash-exp
+                  gptel-log-level 'info
+                  gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev")
+                  ;; gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
+                  gptel-backend (gptel-make-openai "gemini-vr" :protocol "https" :host "gemini-vr.deno.dev" :endpoint "/v1/chat/completions"
+                    :models '("gemini-2.0-flash-exp")
+                    ;; :models '("gemini-2.0-flash-thinking-exp")
+                    :stream t
+                    :key gptel-api-key
+                    )))
   (setq gptel-default-mode #'org-mode))
 #+end_src
-
 *** Consult
 
 #+call: confpkg("!Pkg Consult")
