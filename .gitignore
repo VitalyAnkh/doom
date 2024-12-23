@@ -9,7 +9,7 @@ doctor.el
 init.el
 packages.el
 cli.el
-setup.sh
+!setup.sh
 
 !publish
 !publish/config.html
