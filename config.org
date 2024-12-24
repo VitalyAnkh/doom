@@ -2019,9 +2019,9 @@ aspects are nice, but on others I prefer Fira.
 (setq doom-font (font-spec :family "JetBrainsMono Nerd Font" :size 14)
       doom-big-font (font-spec :family "JetBrainsMono Nerd Font" :size 25)
       ;; doom-symbol-font (font-spec :family "LXGW WenKai" :size 17)
-      doom-variable-pitch-font (font-spec :family "Linux Biolinum G" :size 15)
+      doom-variable-pitch-font (font-spec :family "Linux Biolinum" :size 15)
       ;; doom-variable-pitch-font (font-spec :family "CMU Typewriter Text" :size 17)
-      doom-serif-font (font-spec :family "Linux Biolinum G" :size 15))
+      doom-serif-font (font-spec :family "Linux Biolinum" :size 15))
 
 (add-hook 'after-init-hook (lambda ()
                              ;; Emoji: 😄, 🤦, 🏴󠁧󠁢󠁳󠁣󠁴󠁿
