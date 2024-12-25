@@ -5634,7 +5634,57 @@ Adjust the face of =treemacs=. The =variable-pitch= is too large for a file expl
   )
 #+end_src
 *** Dirvish
+#+call: confpkg("!Pkg Dirvish")
+
+Some lifesaver key bindings for ~Dirvish~ and ~Meow~. Doom doesn't add these key bindings for non-EVIL users.
+
 #+begin_src emacs-lisp
+(after! dirvish
+  (map! :map dirvish-mode-map
+        :ng  "?"   #'dirvish-dispatch
+        :ng  "q"   #'dirvish-quit
+        :ng  "b"   #'dirvish-quick-access
+        :ng "f"   #'dirvish-file-info-menu
+        :ng  "p"   #'dirvish-yank
+        :ng "S"   #'dirvish-quicksort
+        :ng  "F"   #'dirvish-layout-toggle
+        :ng  "z"   #'dirvish-history-jump
+        :ng  "gh"  #'dirvish-subtree-up
+        :ng   "gl"  #'dirvish-subtree-toggle
+        :ng  "h"   #'dired-up-directory
+        :ng  "l"   #'dired-find-file
+        :gm [left]  #'dired-up-directory
+        :gm [right] #'dired-find-file
+        :mg  "[h"  #'dirvish-history-go-backward
+        :mg  "]h"  #'dirvish-history-go-forward
+        :mg  "[e"  #'dirvish-emerge-next-group
+        :mg  "]e"  #'dirvish-emerge-previous-group
+        :ng   "r" #'dirvish-subtree-toggle
+        :ng   "TAB" #'dirvish-subtree-toggle
+        :ng "M-b" #'dirvish-history-go-backward
+        :ng "M-f" #'dirvish-history-go-forward
+        :ng "M-n" #'dirvish-narrow
+        :ng "M-m" #'dirvish-mark-menu
+        :ng "M-s" #'dirvish-setup-menu
+        :ng "M-e" #'dirvish-emerge-menu
+        (:prefix ("y" . "yank")
+         :ng "l"   #'dirvish-copy-file-true-path
+         :ng "n"   #'dirvish-copy-file-name
+         :ng "p"   #'dirvish-copy-file-path
+         :ng "r"   #'dirvish-copy-remote-path
+         :ng "y"   #'dired-do-copy)
+        (:prefix ("s" . "symlinks")
+         :ng "s"   #'dirvish-symlink
+         :ng "S"   #'dirvish-relative-symlink
+         :ng "h"   #'dirvish-hardlink))
+
+  (setq! dirvish-quick-access-entries
+         `(("h" "~/"                          "Home")
+           ("e" ,user-emacs-directory         "Emacs user directory")
+           ("c" "~/projects/dev/"             "Code")
+           ("d" "~/Downloads/"                "Downloads")
+           ("m" "/mnt/"                       "Mounted drives")
+           ("t" "~/.local/share/Trash/files/" "Trash"))))
 #+end_src
 
 *** Visual fill column
