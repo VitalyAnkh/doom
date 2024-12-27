@@ -1388,12 +1388,12 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (unpin! lsp-metals)
 (unpin! lsp-haskell)
 (unpin! lsp-java)
-(unpin! lsp-mode)
 (unpin! dirvish)
 (package! treemacs-nerd-icons :disable t)
 (unpin! treemacs)
 (unpin! lsp-treemacs)
 (unpin! treemacs-nerd-icons)
+(unpin! lsp-mode)
 ;; (package! org-xlatex :recipe
 ;;   (:host github :repo "ksqsf/org-xlatex" :files ("*.el" "*.html")))
 ;;(package! consult-recoll)
@@ -2019,9 +2019,9 @@ aspects are nice, but on others I prefer Fira.
 (setq doom-font (font-spec :family "JetBrainsMono Nerd Font" :size 14)
       doom-big-font (font-spec :family "JetBrainsMono Nerd Font" :size 25)
       ;; doom-symbol-font (font-spec :family "LXGW WenKai" :size 17)
-      doom-variable-pitch-font (font-spec :family "Linux Biolinum" :size 15)
+      doom-variable-pitch-font (font-spec :family "Libertinus Serif" :size 15)
       ;; doom-variable-pitch-font (font-spec :family "CMU Typewriter Text" :size 17)
-      doom-serif-font (font-spec :family "Linux Biolinum" :size 15))
+      doom-serif-font (font-spec :family "Libertinus Serif" :size 15))
 
 (add-hook 'after-init-hook (lambda ()
                              ;; Emoji: 😄, 🤦, 🏴󠁧󠁢󠁳󠁣󠁴󠁿
@@ -13901,7 +13901,7 @@ For how I've setup Org's LaTeX export, the following packages are needed:
 | textcomp   | Font encodings                                        |
 | xcolor     | Colours                                               |
 | xparse     | Extended command/env definition forms                 |
-| xcoffins   | Manipulate coffins (boxes) for typesetting            |
+| xcoffins  | Manipulate coffins (boxes) for typesetting           |
 
 Then for the various fontsets:
 #+name: org-latex-font-packages-list
