@@ -2021,9 +2021,10 @@ aspects are nice, but on others I prefer Fira.
       ;; doom-symbol-font (font-spec :family "LXGW WenKai" :size 17)
       doom-variable-pitch-font (font-spec :family "Libertinus Serif" :size 15)
       ;; doom-variable-pitch-font (font-spec :family "CMU Typewriter Text" :size 17)
+      doom-emoji-font (font-spec :family "Twemoji" :size 15)
       doom-serif-font (font-spec :family "Libertinus Serif" :size 15))
 
-(add-hook 'after-init-hook (lambda ()
+(add-hook 'after-setting-font-hook (lambda ()
                              ;; Emoji: 😄, 🤦, 🏴󠁧󠁢󠁳󠁣󠁴󠁿
                              (set-fontset-font "fontset-default" 'symbol "Apple Color Emoji" nil 'prepend)
                              (set-fontset-font "fontset-default" 'symbol "Symbola" nil 'append)
@@ -2032,7 +2033,7 @@ aspects are nice, but on others I prefer Fira.
                              (set-fontset-font "fontset-default" 'symbol "Noto Sans Symbols2" nil 'prepend)
                              (set-fontset-font "fontset-default" 'symbol "Segoe UI Emoji" nil 'append)
                              (set-fontset-font "fontset-default" 'symbol "Free Serif" nil 'prepend)
-                             (set-fontset-font "fontset-default" 'symbol "twemoji" nil 'prepend)
+                             (set-fontset-font "fontset-default" 'symbol "Twemoji" nil 'prepend)
                              ;;(set-face-attribute 'default nil :font "Droid Sans Mono")
                              ;; East Asia: 你好, 早晨, こんにちは, 안녕하세요
                              ;; (set-fontset-font "fontset-default" 'unicode-bmp "LXGW WenKai" nil 'prepend)
@@ -2049,25 +2050,6 @@ aspects are nice, but on others I prefer Fira.
 (dolist (charset '(kana han cjk-misc bopomofo))
                               (set-fontset-font "fontset-default" ;;(frame-parameter nil 'font)
                                                 charset (font-spec :family "LXGW WenKai" :weight 'medium )))
-
-(set-fontset-font "fontset-default" 'symbol "Apple Color Emoji" nil 'prepend)
-(set-fontset-font "fontset-default" 'symbol "Symbola" nil 'append)
-(set-fontset-font "fontset-default" 'symbol "Noto Color Emoji" nil 'prepend)
-(set-fontset-font "fontset-default" 'symbol "Liberation Mono" nil 'prepend)
-(set-fontset-font "fontset-default" 'symbol "Noto Sans Symbols2" nil 'prepend)
-(set-fontset-font "fontset-default" 'symbol "Segoe UI Emoji" nil 'append)
-(set-fontset-font "fontset-default" 'symbol "Free Serif" nil 'prepend)
-(set-fontset-font "fontset-default" 'symbol "twemoji" nil 'prepend)
-;;(set-face-attribute 'default nil :font "Droid Sans Mono")
-;; East Asia: 你好, 早晨, こんにちは, 안녕하세요
-;; (set-fontset-font "fontset-default" 'unicode-bmp "LXGW WenKai" nil 'prepend)
-(set-fontset-font "fontset-default" 'han "LXGW WenKai" nil 'prepend)
-(set-fontset-font "fontset-default" 'kana "LXGW WenKai" nil 'prepend)
-(set-fontset-font "fontset-default" 'hangul "LXGW WenKai" nil 'prepend)
-(set-fontset-font "fontset-default" 'cjk-misc "Noto Serif CJK SC Regular" nil 'prepend)
-;; Cyrillic: Привет, Здравствуйте, Здраво, Здравейте
-(set-fontset-font "fontset-default" 'cyrillic "Noto Serif" nil 'prepend)
-
 #+end_src
 
 #+attr_html: :class invertible :alt Screenshot of the fonts within Emacs.
@@ -2093,9 +2075,9 @@ To actually sort out emojis, all that's really needed here is to apply
 font variable, but rather my own addition.
 
 #+begin_src emacs-lisp
-;; (add-hook! 'after-setting-font-hook
-;;   (defun +emoji-set-font ()
-;;     (set-fontset-font t 'emoji doom-emoji-font nil 'prepend)))
+(add-hook! 'after-setting-font-hook
+  (defun +emoji-set-font ()
+    (set-fontset-font t 'emoji doom-emoji-font nil 'prepend)))
 #+end_src
 
 We might as well also construct a regexp to make identifying emojis if buffers
@@ -13740,12 +13722,12 @@ able to handle anyway. For them we define a table of LaTeX translations
 | γ         | \(\gamma\)       |
 | δ         | \(\delta\)       |
 | ε         | \(\epsilon\)       |
-| ϵ         | \(\varepsilon\)       |
+| ϵ          | \(\varepsilon\)       |
 | ζ         | \(\zeta\)       |
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι         | \(\iota\)       |
+| ι          | \(\iota\)        |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
@@ -13774,7 +13756,7 @@ able to handle anyway. For them we define a table of LaTeX translations
 | Φ         | \(\Phi\)       |
 | Ψ         | \(\Psi\)       |
 | Ω         | \(\Omega\)       |
-| א         | \(\aleph\)      |
+| א         | \(\aleph\)       |
 | ב         | \(\beth\)       |
 | ד         | \(\daleth\) |
 | ג         | \(\gimel\)       |
