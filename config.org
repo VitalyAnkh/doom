@@ -4144,7 +4144,7 @@ Modal editing on wish! Use =moew= for modal life.
 
 GitHub Copilot is awesome!
 #+begin_src emacs-lisp :tangle packages.el
-(package! copilot :recipe (:host github :repo "zerolfx/copilot.el" :files ("dist" "copilot.el" "copilot-balancer.el")))
+;;(package! copilot :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "copilot.el" "copilot-balancer.el")))
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
@@ -4200,11 +4200,14 @@ GitHub Copilot is awesome!
                   gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev")
                   ;; gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
                   gptel-backend (gptel-make-openai "gemini-vr" :protocol "https" :host "gemini-vr.deno.dev" :endpoint "/v1/chat/completions"
-                    :models '("gemini-2.0-flash-exp")
-                    ;; :models '("gemini-2.0-flash-thinking-exp")
-                    :stream t
-                    :key gptel-api-key
-                    )))
+                  ;; :models '("gemini-2.0-flash-exp")
+                  :models '("gemini-2.0-flash-thinking-exp")
+                  :stream t
+                  :key gptel-api-key
+                  )
+                  ))
+  (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+  (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
   (setq gptel-default-mode #'org-mode))
 #+end_src
 *** Consult
