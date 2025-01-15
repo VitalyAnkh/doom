@@ -1412,6 +1412,13 @@ This is a place I put workarounds. It should be empty in the best scenarios.
   :hook (text-mode . global-display-line-numbers-mode)
   )
 
+;; (defface test-dirvish '() "new face")
+;; (set-face-attribute 'test-dirvish nil :height 80)
+;; ;; add to hook
+;; (face-remap-add-relative 'default 'test-dirvish)
+;; ;; Doom Emacs, for `solaire-mode' is enable in special buffer
+;; (face-remap-add-relative 'solaire-default-face 'test-dirvish)
+
 ;; (defadvice copilot--complete-post-command (around intercept activate)
 ;;   (condition-case err
 ;;       ad-do-it
@@ -1421,8 +1428,9 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (setq straight-repository-branch "develop")
 
 (setq package-native-compile t
-      ;; byte+native-compile t
+      byte+native-compile t
       )
+
 ;; TODO to make eglot show function's signature within one line
 (setq eldoc-echo-area-use-multiline-p nil)
 
@@ -1530,7 +1538,7 @@ Then, for creating new frames within the same Emacs instance, we'll just set the
 default to be something roughly 80% of that size.
 
 #+begin_src emacs-lisp
-;; (push  '(alpha-background . 95) default-frame-alist)
+(push  '(alpha-background . 95) default-frame-alist)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 #+end_src
 
@@ -5662,6 +5670,32 @@ Some lifesaver key bindings for ~Dirvish~ and ~Meow~. Doom doesn't add these key
          :ng "s"   #'dirvish-symlink
          :ng "S"   #'dirvish-relative-symlink
          :ng "h"   #'dirvish-hardlink))
+
+  (defun vr-set-font-for-mode ()
+  (cond
+   ((derived-mode-p 'dired-mode)
+    (setq-local face-remapping-alist '((default (:family "JetBrains Mono Nerd Font" :height 60 :size 6) default))))
+   ;; ((derived-mode-p 'vterm-mode)
+   ;;  (setq-local face-remapping-alist '((default (:family "Kode Mono" :height 160) default))))
+   ))
+
+  (defun vr-buffer-face-mode-small ()
+   "Sets a fixed width (monospace) font in current buffer"
+   (interactive)
+   (setq buffer-face-mode-face '(:family "JetBrains Mono Nerd Font" :height 50))
+   (buffer-face-mode))
+
+  (defun vr-dired-font-decrease ()
+  "Decrease font size by 4 levels in `dired-mode`."
+  (interactive)
+  (toggle-truncate-lines 1)
+  (text-scale-decrease 2))
+
+  ;; Add the function to `dired-mode-hook`.
+  (add-hook 'dired-mode-hook #'vr-dired-font-decrease)
+
+  ;; (add-hook 'dired-mode-hook 'vr-set-font-for-mode)
+  ;; (add-hook 'dired-mode-hook 'vr-buffer-face-mode-small)
 
   (setq! dirvish-quick-access-entries
          `(("h" "~/"                          "Home")
