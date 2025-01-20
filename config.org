@@ -6221,7 +6221,8 @@ I can't use modal editing without my favorite input method: [[https://fcitx-im.o
 within Emacs. Let's add =emacs-smart-input-source= to support smart input method switching.
 #+begin_src emacs-lisp :tangle packages.el
 (package! sis :recipe (:host github :repo "laishulu/emacs-smart-input-source"
-                           :files ("*.el" )))
+                           :files ("*.el" ))
+              :pin "fa12ae71e96dc3eb620db301c7e16ea1d15cc4c9")
 #+end_src
 
 #+begin_src emacs-lisp
@@ -8252,7 +8253,7 @@ Programming in Emacs relys on =LSP=: Language Server Protocol. But the lsp clien
                 'json-read)
               :around
               #'lsp-booster--advice-json-parse)
-  
+
   (defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
     "Prepend emacs-lsp-booster command to lsp CMD."
     (let ((orig-result (funcall old-fn cmd test?)))
@@ -8269,11 +8270,14 @@ Programming in Emacs relys on =LSP=: Language Server Protocol. But the lsp clien
         orig-result)))
   (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
 
+  (lsp-inlay-hints-mode)
+
   :custom
-  (lsp-enable-file-watchers nil)
+  (lsp-enable-file-watchers t)
   (lsp-treemacs-sync-mode)
   (lsp-ui-doc-position "Bottom")
   (lsp-keep-workspace-alive t)
+  (lsp-inlay-hint-enable t)
   (lsp-ui-doc-enable t)
   (lsp-ui-sideline-enable nil)
   (lsp-enable-symbol-highlighting nil)
@@ -8285,6 +8289,22 @@ Programming in Emacs relys on =LSP=: Language Server Protocol. But the lsp clien
   (lsp-semantic-tokens-enable nil)
   (lsp-ui-doc-show-with-mouse t)
   (lsp-ui-doc-show-with-cursor nil)
+  ;; lsp-rust-analyzer tweaks
+  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  (lsp-rust-analyzer-display-chaining-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t)
+  (lsp-rust-analyzer-display-closure-return-type-hints t)
+  (lsp-rust-analyzer-display-parameter-hints t)
+  (lsp-rust-analyzer-display-reborrow-hints t)
+  (lsp-rust-analyzer-server-format-inlay-hints t)
+  (lsp-rust-analyzer-closure-return-type-hints t)
+  (lsp-rust-analyzer-discriminants-hints t)
+  (lsp-rust-analyzer-expression-adjustment-hints t)
+  (lsp-rust-analyzer-expression-adjustment-hints-mode)
+  (lsp-rust-analyzer-closure-capture-hints t)
+  (lsp-rust-analyzer-binding-mode-hints t)
+  (lsp-rust-analyzer-closing-brace-hints t)
+  (lsp-rust-analyzer-closing-brace-hints-min-lines t)
   )
 
 #+end_src
