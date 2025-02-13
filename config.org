@@ -4203,13 +4203,13 @@ GitHub Copilot is awesome!
         (while (and (not (eobp)) (looking-at "[^ \t]+"))
           (push (match-string 0) ollama-models)
           (forward-line 1))))
-    (setq-default gptel-model 'gemini-2.0-flash-exp
+    (setq-default gptel-model 'gemini-2.0-pro-exp
                   gptel-log-level 'info
                   gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev")
                   ;; gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
                   gptel-backend (gptel-make-openai "gemini-vr" :protocol "https" :host "gemini-vr.deno.dev" :endpoint "/v1/chat/completions"
-                  ;; :models '("gemini-2.0-flash-exp")
-                  :models '("gemini-2.0-flash-thinking-exp")
+                  :models '("gemini-2.0-pro-exp")
+                  ;; :models '("gemini-2.0-pro-thinking-exp")
                   :stream t
                   :key gptel-api-key
                   )
@@ -6221,8 +6221,7 @@ I can't use modal editing without my favorite input method: [[https://fcitx-im.o
 within Emacs. Let's add =emacs-smart-input-source= to support smart input method switching.
 #+begin_src emacs-lisp :tangle packages.el
 (package! sis :recipe (:host github :repo "laishulu/emacs-smart-input-source"
-                           :files ("*.el" ))
-              :pin "fa12ae71e96dc3eb620db301c7e16ea1d15cc4c9")
+                           :files ("*.el" )))
 #+end_src
 
 #+begin_src emacs-lisp
