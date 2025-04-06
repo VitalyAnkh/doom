@@ -17,6 +17,8 @@
 (remove-hook 'kill-emacs-hook #'org-persist-gc)
 (require 'ox-html)
 
+(require 'config-ox-html)
+
 ;; For some faces
 (require 'highlight-numbers)
 (require 'highlight-quoted)
@@ -27,6 +29,7 @@
         (buffer-file-name (expand-file-name "config.org" config-root))
         (org-export-coding-system 'utf-8)
         (org-export-with-broken-links t)
+        (org-confirm-babel-evaluate nil)
         org-mode-hook org-load-hook)
     (insert-file-contents (expand-file-name "config.org" config-root))
     (goto-char (point-max))

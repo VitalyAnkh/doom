@@ -1412,11 +1412,7 @@ This is a place I put workarounds. It should be empty in the best scenarios.
   :hook (text-mode . global-display-line-numbers-mode)
   )
 
-;; (defface test-dirvish '() "new face")
-;; (set-face-attribute 'test-dirvish nil :height 80)
-;; ;; add to hook
-;; (face-remap-add-relative 'default 'test-dirvish)
-;; ;; Doom Emacs, for `solaire-mode' is enable in special buffer
+;; Doom Emacs, for `solaire-mode' is enable in special buffer
 ;; (face-remap-add-relative 'solaire-default-face 'test-dirvish)
 
 ;; (defadvice copilot--complete-post-command (around intercept activate)
@@ -2061,7 +2057,7 @@ aspects are nice, but on others I prefer Fira.
 #+end_src
 
 #+attr_html: :class invertible :alt Screenshot of the fonts within Emacs.
-[[https://tecosaur.com/lfs/emacs-config/screenshots/font-face.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/font-face.png]]
 
 In addition to these fonts, Merriweather is used with =nov.el=, and Alegreya as a
 serifed proportional font used by =mixed-pitch-mode= for =writeroom-mode= with Org
@@ -2203,46 +2199,47 @@ listing the missing fonts should appear for at least half a second.
 
 The ~doom-one~ theme is nice and all, but I find the ~vibrant~ variant nicer. With
 the light themes, I rather like ~doom-tomorrow-day~. I'd like to pick the default
-from them based on the system theme. We can detect this with a ~gdbus~ call, which
-is a Gnome CLI tool but often present on KDE systems for GTK support.
+from them based on the system theme. Thanks to the continued expansion of the
+=xdg-desktop-portal= protocols, we can read this from D-Bus on most systems.
 
 #+name: default-theme
 #+begin_src emacs-lisp :noweb-ref none
-(let ((light-theme 'doom-one-light)
-      (dark-theme 'doom-one-light)
-       (system-light-p
-       (and
-        (executable-find "gdbus")
-        (string= "<<uint32 2>>"
-                 (with-temp-buffer
-                   (call-process "gdbus" nil t nil
-                                 "call" "--session"
-                                 "--timeout=1000"
-                                 "--dest=org.freedesktop.portal.Desktop"
-                                 "--object-path" "/org/freedesktop/portal/desktop"
-                                 "--method" "org.freedesktop.portal.Settings.Read"
-                                 "org.freedesktop.appearance" "color-scheme")
-                   (string-trim (buffer-string) "(" ",)\n"))))))
-  (if system-light-p light-theme dark-theme))
+(let ((light-theme 'doom-tomorrow-day)
+      (dark-theme 'doom-vibrant)
+      (system-theme
+       (or (and (memq system-type '(gnu gnu/linux gnu/kfreebsd))
+                (require 'dbus nil t)
+                (caar
+                 (ignore-errors
+                   (dbus-call-method
+                    :session
+                    "org.freedesktop.portal.Desktop" "/org/freedesktop/portal/desktop"
+                    "org.freedesktop.portal.Settings" "Read"
+                    "org.freedesktop.appearance" "color-scheme"))))
+           0)))
+  (pcase system-theme
+    (1 dark-theme)
+    (2 light-theme)
+    (_ dark-theme)))
 #+end_src
 
 We'll use the appropriate theme as the default, but let's also accept the theme
-as an envvar for fun.
+as an environment variable =DOOM_THEME= for fun.
 
 #+begin_src emacs-lisp :noweb yes
-;; (setq doom-theme
-;;       (if (getenv "DOOM_THEME")
-;;           (intern (getenv "DOOM_THEME"))
-;;         '<<default-theme()>>))
-
 (setq doom-theme 'doom-one-light)
 
-(setq
- doom-themes-enable-bold nil ; if nil, bold is universally disabled
- doom-themes-enable-italic t ; if nil, italics is universally disabled
- doom-themes-padded-modeline t
- doom-themes-treemacs-enable-variable-pitch nil)
+;; (setq
+;;  doom-themes-enable-bold nil ; if nil, bold is universally disabled
+;;  doom-themes-enable-italic t ; if nil, italics is universally disabled
+;;  doom-themes-padded-modeline t
+;;  doom-themes-treemacs-enable-variable-pitch nil)
 
+;; (setq doom-theme ; Set according to the env var or system-dependent default
+;;       (let ((env-theme (getenv "DOOM_THEME")))
+;;         (if env-theme
+;;             (intern env-theme) ; Note: `intern-soft' doesn't work here
+;;           '<<default-theme()>>)))
 #+end_src
 
 Oh, and with the nice selection doom provides there's no reason for me to want
@@ -2252,14 +2249,58 @@ the defaults.
 (delq! t custom-theme-load-path)
 #+end_src
 
+While the theme environment variable is nice for flexibility, when starting
+Emacs in a terminal it doesn't help us set the right sort of theme
+automatically. However, we can check if we're in a terminal and pick a default
+theme colour accordingly.
+
+#+begin_src emacs-lisp
+(declare-function 'xterm-query "xterm")
+
+(defvar term-background-rgb nil
+  "A RGB triple corresponding to the current terminal background, if known.")
+
+(defun +interpret-term-bg ()
+  "Examine an OSC color query response, and set `term-background-rgb' accordingly."
+  (let ((str "")
+        chr)
+    ;; The reply should be: \e ] 11 ; rgb: NUMBER1 / NUMBER2 / NUMBER3 \e \\
+    (while (and (setq chr (xterm--read-event-for-query)) (not (equal chr ?\\)))
+      (setq str (concat str (string chr))))
+    (when (string-match
+           "rgb:\\([a-f0-9]+\\)/\\([a-f0-9]+\\)/\\([a-f0-9]+\\)" str)
+      (let ((r (string-to-number (match-string 1 str) 16))
+            (g (string-to-number (match-string 2 str) 16))
+            (b (string-to-number (match-string 3 str) 16)))
+        (setq term-background-rgb (list r g b))))))
+
+(defun +doom-init-theme-termaware ()
+  "Update `doom-theme' if in a terminal, unless DOOM_THEME has been set."
+  (let (term-shade)
+    (when (and (not (display-graphic-p (selected-frame)))
+               (not (getenv "DOOM_THEME"))
+               (require 'xterm nil t))
+      (message "Querying terminal background color")
+      (xterm--query "\e]11;?\e\\" '(("\e]11;" . +interpret-term-bg)))
+      (when term-background-rgb
+        (setq term-shade (if (< (apply #'+ term-background-rgb) (* 0.6 3 65535))
+                             'dark 'light))
+        (pcase term-shade
+          ('dark (setq doom-theme 'doom-one-light))
+          ('light (setq doom-theme 'doom-one-light)))))
+    (doom-init-theme-h)))
+#+end_src
+
 Lastly, I had some issues with theme race conditions, which seem to be resolved
 by moving =doom-init-theme-h= around. Henrik attempted to help with this in May
 2021 but we didn't manage to pin down the issue. It may be worth periodically
-checking back and seeing if this is still needed.
+checking back and seeing if this is still needed. We might as well inject
+~+doom-init-theme-termaware~ while we're at it.
 
 #+begin_src emacs-lisp
 (remove-hook 'window-setup-hook #'doom-init-theme-h)
-(add-hook 'after-init-hook #'doom-init-theme-h 'append)
+(remove-hook 'after-init-hook   #'doom-init-theme-h)
+(add-hook    'after-init-hook   #'+doom-init-theme-termaware 'append)
 #+end_src
 
 **** Line numbers
@@ -3174,7 +3215,7 @@ configuration]], we might as well display something a bit prettier than =*doom*=
 The end result is a minimal but rather nice splash screen.
 
 #+attr_html: :class invertible :alt The splash screen, just loaded.
-[[https://tecosaur.com/lfs/emacs-config/screenshots/splash-screen.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/splash-screen.png]]
 
 To keep the splash image up to date, we just need to check it every time the
 frame size or theme is changed.
@@ -3736,7 +3777,7 @@ let's change that, and do a few other similar tweaks while we're at it.
 #+end_src
 
 #+attr_html: :class invertible :alt Whichkey triggered on an evil motion
-[[https://tecosaur.com/lfs/emacs-config/screenshots/whichkey-evil.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/whichkey-evil.png]]
 
 ** Tools
 *** Abbrev
@@ -4192,44 +4233,120 @@ GitHub Copilot is awesome!
   :custom
   (gptel-temperature 0.2)
   :config
-  (setq auth-sources '("~/.authinfo"))
-  (setq gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev"))
-  (setq gptel-directives
-        `((default . nil)
-          ...
-          )
-        gptel--system-message nil)
-  (let (ollama-models)
-    (when (executable-find "ollama")
-      (with-temp-buffer
-        (call-process "ollama" nil t nil "list")
-        (goto-char (point-min))
-        (forward-line 1)
-        (while (and (not (eobp)) (looking-at "[^ \t]+"))
-          (push (match-string 0) ollama-models)
-          (forward-line 1))))
-    (setq-default gptel-model 'gemini-2.0-pro-exp
-                  gptel-log-level 'info
-                  gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev")
-                  ;; gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
-                  gptel-backend (gptel-make-openai "gemini-vr" :protocol "https" :host "gemini-vr.deno.dev" :endpoint "/v1/chat/completions"
-                  :models '("gemini-2.5-pro-exp")
-                  ;; :models '("gemini-2.5-pro-thinking-exp")
-                  :stream t
-                  :key gptel-api-key
-                  )
-                  ))
-  ;; DeepSeek offers an OpenAI compatible API
-  (gptel-make-openai "DeepSeek"       ;Any name you want
-    :host "api.deepseek.com"
-    :endpoint "/chat/completions"
-    :stream t
-    :key "sk-fdsafs"               ;can be a function that returns the key
-    :models '(deepseek-r1 deepseek-v3))
-  (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-  (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
+  ;; (setq auth-sources '("~/.authinfo"))
+  ;; (setq gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev"))
+  ;; (setq gptel-directives
+  ;;       `((default . nil)
+  ;;         ...
+  ;;         )
+  ;;       gptel--system-message nil)
+  ;; (let (ollama-models)
+  ;;   (when (executable-find "ollama")
+  ;;     (with-temp-buffer
+  ;;       (call-process "ollama" nil t nil "list")
+  ;;       (goto-char (point-min))
+  ;;       (forward-line 1)
+  ;;       (while (and (not (eobp)) (looking-at "[^ \t]+"))
+  ;;         (push (match-string 0) ollama-models)
+  ;;         (forward-line 1))))
+  ;;   (setq-default gptel-model 'gemini-2.0-pro-exp
+  ;;                 gptel-log-level 'info
+  ;;                 gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev")
+  ;;                 ;; gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
+  ;;                 gptel-backend (gptel-make-openai "gemini-vr" :protocol "https" :host "gemini-vr.deno.dev" :endpoint "/v1/chat/completions"
+  ;;                 :models '("gemini-2.5-pro-exp")
+  ;;                 ;; :models '("gemini-2.5-pro-thinking-exp")
+  ;;                 :stream t
+  ;;                 :key gptel-api-key
+  ;;                 )
+  ;;                 ))
+  ;; ;; DeepSeek offers an OpenAI compatible API
+  ;; (gptel-make-openai "DeepSeek"       ;Any name you want
+  ;;   :host "api.deepseek.com"
+  ;;   :endpoint "/chat/completions"
+  ;;   :stream t
+  ;;   :key "sk-fdsafs"               ;can be a function that returns the key
+  ;;   :models '(deepseek-r1 deepseek-v3))
+  ;; (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+  ;; (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
+  
+  (let ((groq-backend
+         (gptel-make-openai "Groq"
+           :host "api.groq.com"
+           :endpoint "/openai/v1/chat/completions"
+           :stream t
+           :key (lambda () (or (secrets-get-secret "Login" "groq")
+                          (secrets-get-secret "kdewallet" "groq")))
+           :models '("llama3-70b-8192"
+                     "llama3-8b-8192"
+                     "llama-3.1-70b-versatile"
+                     "llama-3.1-8b-instant"
+                     "llama-3.2-1b-preview"
+                     "deepseek-r1-distill-llama-70b"
+                     "mixtral-8x7b-32768"
+                     "gemma-7b-it"
+                     "gemma2-9b-it")))
+        (openai-backend
+         (gptel-make-openai "ChatGPT"
+           :host "api.openai.com"
+           :stream t
+           :key (lambda () (or (secrets-get-secret "Login" "openai")
+                          (secrets-get-secret "kdewallet" "openai")))
+           :models '("gpt-4o" "gpt-4o-mini" "chatgpt-4o-latest"
+                     "o1" "o1-mini")))
+        (anthropic-backend
+         (gptel-make-anthropic "Claude"
+           :stream t
+           :key (lambda () (or (secrets-get-secret "Login" "anthropic")
+                          (secrets-get-secret "kdewallet" "anthropic")))
+           :models '("claude-3-5-sonnet-20240620"
+                     "claude-3-sonnet-20240229"
+                     "claude-3-haiku-20240307")))
+        (ollama-backend
+         (let (ollama-models)
+           (when (executable-find "ollama")
+             (with-temp-buffer
+               (call-process "ollama" nil t nil "list")
+               (goto-char (point-min))
+               (forward-line 1)
+               (while (and (not (eobp)) (looking-at "[^ \t]+"))
+                 (push (match-string 0) ollama-models)
+                 (forward-line 1)))
+             (gptel-make-ollama "Ollama" :models ollama-models :stream t)))))
+    (setq-default gptel-model "llama-3.1-70b-versatile"
+                  gptel-backend groq-backend))
+  (delete (assoc "ChatGPT" gptel--known-backends) gptel--known-backends)
   (setq gptel-default-mode #'org-mode))
 #+end_src
+
+*** Headlice
+
+#+call: confpkg("!Pkg Headlice")
+
+Dealing with licenses and in particular license headers is frankly a bit of a
+pain, and so I've written a package so that this just takes care of itself and I
+don't have to think about it.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! headlice :recipe (:host nil :repo "https://code.tecosaur.net/tec/headlice.git"
+                                                              :files (:defaults "licenses" "headers")))
+#+end_src
+
+The author of this package has set some pretty good defaults, but as usual there
+are some specific personal preferences I'd like to apply, and then there's the
+minor matter of hooking it into Emacs/Doom.
+
+#+begin_src emacs-lisp
+(use-package! headlice
+  :hook (prog-mode . headlice-auto-insert)
+  :config
+  (setq headlice-preferred-license 'mpl
+        headlice-use-spdx-headers t
+        headlice-ignored-licenses '(gpl-3)
+        headlice-user-email "vr@vitalyr.com")
+  (defalias '+file-templates/insert-license #'headlice-create-license))
+#+end_src
+
 *** Consult
 
 #+call: confpkg("!Pkg Consult")
@@ -4277,7 +4394,7 @@ instance. Let's make that a bit more streamlined by introducing a quick-entry
 "default forge" option.
 
 #+begin_src emacs-lisp
-(defvar +magit-default-forge-remote "git@code.tecosaur.net:tec/%s.git"
+(defvar +magit-default-forge-remote "git@ssh.tecosaur.net:tec/%s.git"
   "Format string that fills out to a remote from the repo name.
 Set to nil to disable this functionality.")
 #+end_src
@@ -4556,7 +4673,7 @@ add package src directories to projectile. This isn't desirable in my opinion.
       (list "~/" "/tmp" (expand-file-name "straight/repos" doom-local-dir)))
 (defun projectile-ignored-project-function (filepath)
   "Return t if FILEPATH is within any of `projectile-ignored-projects'"
-  (or (mapcar (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects)))
+  (or (mapcar (lambda (p) (string-prefix-p p filepath)) projectile-ignored-projects)))
 #+end_src
 
 *** Jinx
@@ -4801,7 +4918,7 @@ This makes it a breeze to take lovely screenshots.
 #+end_src
 
 #+attr_html: :class invertible :alt Example screenshot.el screenshot
-[[https://tecosaur.com/lfs/emacs-config/screenshots/screenshot.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/screenshot.png]]
 
 Some light configuring is all we need, so we can make use of the [[https://github.com/Calinou/0x0][0x0]] wrapper
 file uploading script (which I've renamed to ~upload~).
@@ -4909,7 +5026,7 @@ This makes manual pages nicer to look at by adding variable pitch fontification
 and colouring 🙂.
 
 #+attr_html: :class invertible :style width:80% :alt Example info-colours page.
-[[https://tecosaur.com/lfs/emacs-config/screenshots/info-colours.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/info-colours.png]]
 
 #+begin_src emacs-lisp :tangle packages.el
 (package! info-colors)
@@ -4925,7 +5042,7 @@ To use this we'll just hook it into =Info=.
 #+end_src
 
 #+attr_html: :class invertible :alt Example colourised info page
-[[https://tecosaur.com/lfs/emacs-config/screenshots/info-coloured.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/info-coloured.png]]
 
 *** Modus themes
 
@@ -5163,7 +5280,7 @@ keyboard stuff I'm doing on-screen seems helpful. While [[https://gitlab.com/scr
 having something that doesn't cover up screen content is nice.
 
 #+attr_html: :class invertible :alt Screenshot of Keycast-mode in action
-[[https://tecosaur.com/lfs/emacs-config/screenshots/keycast.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/keycast.png]]
 
 #+begin_src emacs-lisp :tangle packages.el
 (package! keycast)
@@ -5428,8 +5545,9 @@ than Objective-C. As such, it'll be switching the icon associated with =.m=.
 
 #+begin_src emacs-lisp
 (after! nerd-icons
-  (setcdr (assoc "m" nerd-icons-extension-icon-alist)
-          (cdr (assoc "matlab" nerd-icons-extension-icon-alist))))
+  (when-let ((matlab-icon (assoc "matlab" nerd-icons-extension-icon-alist)))
+    (setcdr (assoc "m" nerd-icons-extension-icon-alist)
+            (cdr matlab-icon))))
 #+end_src
 
 *** Prettier page breaks
@@ -5439,21 +5557,54 @@ than Objective-C. As such, it'll be switching the icon associated with =.m=.
 In some files, =^L= appears as a page break character. This isn't that visually
 appealing, and Steve Purcell has been nice enough to make a package to display
 these as horizontal rules.
+
 #+begin_src emacs-lisp :tangle packages.el
 (package! page-break-lines :recipe (:host github :repo "purcell/page-break-lines"))
 #+end_src
 
+We can go from "better" to "where has this been all my life?" by now making page
+navigation easy with some simple keybindings lifted from [[http://xahlee.info/emacs/emacs/modernization_formfeed.html][Xah Lee]]'s post on the
+form feed. Making ~forward-page~ and ~backward-page~ work with Evil mode also takes
+a little tweaking, so we might as well do that too while we're at it.
+
+We can also make the displayed horizontal rule communicate more useful
+information by making it the same as the fill column. While this could be
+accomplished by just =setq=​ing the rule width to the default ~fill-column~ value,
+it would be better for it to always match the local buffer value. This may be
+accomplished with advise, but it's a bit cleaner (and even simpler) to just turn
+the width variable into an alias for ~fill-column~.
+
 #+begin_src emacs-lisp
 (use-package! page-break-lines
-  :commands page-break-lines-mode
+  :hook (prog-mode . page-break-lines-mode)
   :init
   (autoload 'turn-on-page-break-lines-mode "page-break-lines")
   :config
-  (setq page-break-lines-max-width fill-column)
+  (defvaralias 'page-break-lines-max-width 'fill-column)
+  (defun +evil-forward-page ()
+    "Call `forward-page', such that it works as intended with evil-mode."
+    (interactive)
+    (when (eq (char-after (point)) ?\^L)
+      (forward-char 1))
+    (forward-page))
+  (defun +evil-backward-page ()
+    "Call `backward-page', such that it works as intended with evil-mode."
+    (interactive)
+    (when (eq (char-after (point)) ?\^L)
+      (backward-char 1))
+    (backward-page))
   (map! :prefix "g"
-        :desc "Prev page break" :nv "[" #'backward-page
-        :desc "Next page break" :nv "]" #'forward-page))
+        :desc "Prev page break" :nv "[" #'+evil-backward-page
+        :desc "Next page break" :nv "]" #'+evil-forward-page)
+  (map! "<C-M-prior>" #'+evil-backward-page
+        "<C-M-next>" #'+evil-forward-page))
 #+end_src
+
+With this setup, I find form-feeds to be a really convenient addition to my
+coding workflow. Despite generally poor adoption, they are the only
+language-independent form that "just works". While you could also use specially
+crafted comment forms and a more complex setup, it's not as though the form-feed
+is being used for anything else --- it's free real estate! 😉
 
 *** Writeroom
 
@@ -5528,7 +5679,7 @@ tweaks. Namely:
 #+end_src
 
 #+attr_html: :class invertible :alt Writeroom applied to an Org file
-[[https://tecosaur.com/lfs/emacs-config/screenshots/writeroom-and-org.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/writeroom-and-org.png]]
 
 *** Treemacs
 
@@ -6376,7 +6527,7 @@ something through Emacs?
 Then, to actually read the ebooks we use =nov=.
 
 #+attr_html: :class invertible :alt Excerpt of the GNU Emacs manual viewed through nov.el
-[[https://tecosaur.com/lfs/emacs-config/screenshots/nov.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/nov.png]]
 
 #+begin_src emacs-lisp
 ;; (use-package! nov
@@ -6473,7 +6624,7 @@ opportunity which is taken advantage of in the CalcTeX package.
 #+end_src
 
 #+attr_html: :class invertible :alt Demonstration of calc, prettified by calctex.
-[[https://tecosaur.com/lfs/emacs-config/screenshots/calc-with-calctex.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/calc-with-calctex.png]]
 
 We'd like to use CalcTeX too, so let's set that up, and fix some glaring
 inadequacies --- why on earth would you commit a hard-coded path to an executable
@@ -6594,7 +6745,7 @@ I really like what [[https://github.com/fuxialexander/doom-emacs-private-xfu/tre
 module. Let's just try to patch on the main things I like the look of.
 
 #+attr_html: :class invertible :alt Example elfeed entry
-[[https://tecosaur.com/lfs/emacs-config/screenshots/elfeed.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/elfeed.png]]
 
 *** Keybindings
 
@@ -6827,7 +6978,7 @@ Hence, we'll fall back to [[https://dushistov.github.io/sdcv/][sdcv]] (a CLI ver
 To interface with this, we'll use a my =lexic= package.
 
 #+attr_html: :class invertible :alt Screenshot of the lexic-mode view of "literate"
-[[https://tecosaur.com/lfs/emacs-config/screenshots/lexic.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/lexic.png]]
 
 #+begin_src emacs-lisp :tangle (if (executable-find "sdcv") "packages.el" "no")
 (package! lexic :recipe (:host github :repo "tecosaur/lexic"))
@@ -6879,7 +7030,7 @@ Now let's use this instead of wordnet.
 Lastly, I want to make sure I have some dictionaries set up. I've put a tarball
 of dictionaries online which we can download if none seem to be present on the
 system.
-#+begin_src shell :tangle (if (and (executable-find "sdsv") (not (file-exists-p (concat (or (getenv "STARDICT_DATA_DIR") (concat (or "~/.local/share" (getenv "XDG_DATA_HOME")) "/stardict")) "/dic")))) "setup.sh" "no")
+#+begin_src shell :tangle (if (and (executable-find "sdcv") (not (file-exists-p (concat (or (getenv "STARDICT_DATA_DIR") (concat (or "~/.local/share" (getenv "XDG_DATA_HOME")) "/stardict")) "/dic")))) "setup.sh" "no")
 DIC_FOLDER=${STARDICT_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/stardict}/dic
 if [ ! -d "$DIC_FOLDER" ]; then
     TMP="$(mktemp -d /tmp/dict-XXX)"
@@ -7690,6 +7841,13 @@ addresses, so let's fix this with advise.
 We'll also use a nicer alert icon
 #+begin_src emacs-lisp
 (setq mu4e-alert-icon "/usr/share/icons/Papirus/64x64/apps/evolution.svg")
+#+end_src
+
+And save ourselves from the awful =mu4e-thread-fold-face=.
+
+#+begin_src emacs-lisp
+(custom-set-faces!
+  '(mu4e-thread-fold-face :inherit default))
 #+end_src
 
 **** Sending Mail
@@ -8846,7 +9004,7 @@ correct package statement needed.
 ;;       (recipe-common '(:files (:defaults "etc")
 ;;                        :build t
 ;;                        :pre-build
-;;                        (with-temp-file "org-version.el"
+;;                        (with-temp-file "lisp/org-version.el"
 ;;                          (require 'lisp-mnt)
 ;;                          (let ((version ;; (lm-version "lisp/org.el")
 ;;                                 (with-temp-buffer
@@ -8867,13 +9025,13 @@ correct package statement needed.
 ;;      (pp `(package! org
 ;;             :recipe (,@(if dev-key-p
 ;;                            (list :host nil :repo "tec@git.savannah.gnu.org:/srv/git/emacs/org-mode.git" :local-repo "lisp/org"
-;;                                  :fork (list :host nil :repo "gitea@git.tecosaur.net:tec/org-mode.git" :branch "dev" :remote "tecosaur"))
-;;                          (list :host nil :repo "https://git.tecosaur.net/mirrors/org-mode.git" :remote "mirror"
-;;                                :fork (list :host nil :repo "https://git.tecosaur.net/tec/org-mode.git" :branch "dev" :remote "tecosaur")))
+;;                                  :fork (list :host nil :repo "git@ssh.tecosaur.net:tec/org-mode.git" :branch "dev" :remote "tecosaur"))
+;;                          (list :host nil :repo "https://code.tecosaur.net/mirrors/org-mode.git" :remote "mirror"
+;;                                :fork (list :host nil :repo "https://code.tecosaur.net/tec/org-mode.git" :branch "dev" :remote "tecosaur")))
 ;;                      ,@recipe-common)
 ;;             :pin nil)))
 ;;     (untabify (point-min) (point-max))
-;; (buffer-string)))
+;;     (buffer-string)))
 #+end_src
 
 #+begin_src emacs-lisp :tangle packages.el :noweb no-export
@@ -9206,6 +9364,7 @@ post-processing the =latexdiff= result.
         (replace-match (format "definecolor{red}{HTML}{%s}" red)))
       (when (re-search-forward "definecolor{blue}{rgb}{0,0,1}" (cdr (bounds-of-thing-at-point 'line)) t)
         (replace-match (format "definecolor{blue}{HTML}{%s}" blue)))))
+  (setq orgdiff-latexdiff-args '("--append-safecmd=acr,acrs"))
   (add-to-list 'orgdiff-latexdiff-postprocess-hooks #'+orgdiff-nicer-change-colours))
 #+end_src
 
@@ -9619,7 +9778,7 @@ The agenda is nice, but a souped up version is nicer.
 Let's setup some org-capture templates, and make them visually nice to access.
 
 #+attr_html: :class invertible :alt My org-capture dialouge.
-[[https://tecosaur.com/lfs/emacs-config/screenshots/org-capture.png]]
+[[https://code.tecosaur.net/tec/emacs-config/media/branch/master/misc/screenshots/org-capture.png]]
 
 ~doct~ (Declarative Org Capture Templates) seems to be a nicer way to
 set up org-capture.
@@ -9951,7 +10110,7 @@ the [[*Window title][Window title]].
 #+begin_src emacs-lisp
 (defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
   :around #'doom-modeline-buffer-file-name ; takes no args
-  (if (s-contains-p org-roam-directory (or buffer-file-name ""))
+  (if (string-match-p (regexp-quote org-roam-directory) (or buffer-file-name ""))
       (replace-regexp-in-string
        "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
        "🢔(\\1-\\2-\\3) "
@@ -10234,7 +10393,7 @@ It likely misses some edge cases, but should mostly work.
     (let ((count 0)
           (case-fold-search nil))
       (while (re-search-forward "^[ \t]*#\\+[A-Z_]+" nil t)
-        (unless (s-matches-p "RESULTS" (match-string 0))
+        (unless (string-match-p "RESULTS" (match-string 0))
           (replace-match (downcase (match-string 0)) t)
           (setq count (1+ count))))
       (message "Replaced %d occurances" count))))
@@ -10958,7 +11117,7 @@ TODO abstract backend implementations."
                                   (substring all-caps-str 0 (if trailing-s -2 -1))
                                 (substring all-caps-str 0 (+ (if trailing-s -1 (length all-caps-str)))))))
                     (pcase base-backend
-                      ('latex (concat "\\acr{" (s-downcase acr) "}" (when trailing-s "\\acrs{}") final-char))
+                      ('latex (concat "\\acr{" (downcase acr) "}" (when trailing-s "\\acrs{}") final-char))
                       ('html (concat "<span class='acr'>" acr "</span>" (when trailing-s "<small>s</small>") final-char)))))))
        text t t))))
 
@@ -11419,13 +11578,20 @@ Lastly, let's pile on some metadata. This gives my pages nice embeds.
 
 (defun org-html-meta-tags-fancy (info)
   "Use the INFO plist to construct the meta tags, as described in `org-html-meta-tags'."
-  (let ((title (org-html-plain-text
-                (org-element-interpret-data (plist-get info :title)) info))
-        (author (and (plist-get info :with-author)
-                     (let ((auth (plist-get info :author)))
-                       ;; Return raw Org syntax.
-                       (and auth (org-html-plain-text
-                                  (org-element-interpret-data auth) info))))))
+  (let* ((title (org-html-plain-text
+                 (org-element-interpret-data (plist-get info :title)) info))
+         (author (and (plist-get info :with-author)
+                      (let ((auth (plist-get info :author)))
+                        ;; Return raw Org syntax.
+                        (and auth (org-html-plain-text
+                                   (org-element-interpret-data auth) info)))))
+         (author-first-last
+          (and (not (org-string-nw-p author))
+               (save-match-data
+                 (if (string-match "\\`\\(.+?\\) +\\(.+?\\)\\'" author)
+                     (cons (match-string 1 author)
+                           (match-string 2 author))
+                   (cons author nil))))))
     (append
      (list
       (when (org-string-nw-p author)
@@ -11447,10 +11613,10 @@ Lastly, let's pile on some metadata. This gives my pages nice embeds.
              (list "property" "og:image:height" (plist-get org-html-meta-tags-opengraph-image :height))
              (list "property" "og:image:alt" (plist-get org-html-meta-tags-opengraph-image :alt))))
      (list
-      (when (org-string-nw-p author)
-        (list "property" "og:article:author:first_name" (car (s-split-up-to " " author 2))))
-      (when (and (org-string-nw-p author) (s-contains-p " " author))
-        (list "property" "og:article:author:last_name" (cadr (s-split-up-to " " author 2))))
+      (when (car author-first-last)
+        (list "property" "og:article:author:first_name" (car author-first-last)))
+      (when (cdr author-first-last)
+        (list "property" "og:article:author:last_name" (cdr author-first-last)))
       (list "property" "og:article:published_time"
             (format-time-string
              "%FT%T%z"
@@ -13461,8 +13627,8 @@ buffer to make insertion easier.
   "Directory where emojis should be saved and look for.")
 
 (defvar org-latex-emoji-sets
-  '(("twemoji" :url "https://github.com/twitter/twemoji/archive/refs/tags/v14.0.2.zip"
-     :folder "twemoji-14.0.2/assets/svg" :height "1.8ex" :offset "-0.3ex")
+  '(("twemoji" :url "https://github.com/jdecked/twemoji/archive/refs/tags/v15.1.0.zip"
+     :folder "twemoji-15.1.0/assets/svg" :height "1.8ex" :offset "-0.3ex")
     ("twemoji-bw" :url "https://github.com/youdly/twemoji-color-font/archive/refs/heads/v11-release.zip"
      :folder "twemoji-color-font-11-release/assets/builds/svg-bw" :height "1.8ex" :offset "-0.3ex")
     ("openmoji" :url "https://github.com/hfg-gmuend/openmoji/releases/latest/download/openmoji-svg-color.zip"
@@ -13661,7 +13827,7 @@ Now we just need to fetch and convert the emoji images.
     (when (or (not (file-exists-p emoji-folder))
               (and (not noninteractive)
                    (yes-or-no-p "Emoji folder already present, would you like to re-download?")
-                   (progn (delete-directory emoji-folder) t)))
+                   (progn (delete-directory emoji-folder t) t)))
       (let* ((spec (cdr (assoc set org-latex-emoji-sets)))
              (dir (org-latex-emoji-install--download set (plist-get spec :url)))
              (svg-dir (expand-file-name (or (plist-get spec :folder) "") dir)))
@@ -13953,46 +14119,52 @@ This gives the same advantages as mentioned in the [[*Make verbatim different to
 
 For how I've setup Org's LaTeX export, the following packages are needed:
 #+name: org-latex-required-packages-list
-| Package    | Description                                           |
-|------------+-------------------------------------------------------|
-| adjustbox  | Adjust general LaTeX material in like includegraphics |
-| amsmath    | A near-essential maths package                        |
-| booktabs   | Nice horizontal lines in tables                       |
-| cancel     | Cancel terms in equations                             |
-| capt-of    | Captions outside floats                               |
-| caption    | Finer control over captions                           |
-| cleveref   | Easy cross-referencing                                |
-| embedall   | Embed files in the document                           |
-| float      | Floating environments                                 |
-| fontenc    | Font encodings                                        |
-| fvextra    | Enhanced verbatim environments                        |
-| graphicx   | An extended graphics package                          |
-| hanging    | Used by oc-csl                                        |
-| hyperref   | Links                                                 |
-| inputenc   | Input file encodings                                  |
-| longtable  | Multi-page tables                                     |
-| mathalpha  | Set extended math alphabet fonts                      |
-| mathtools  | Typesetting tools for maths                           |
-| microtype  | Microtypography                                       |
-| pdfx       | Create pdf/a- and pdf/x- compatible documents         |
-| pifont     | A collection of symbols                               |
-| preview    | Needed for AUCTeX and ob-latex                        |
-| scrbase    | KOMA classes and more                                 |
-| siunitx    | Proper unit support                                   |
-| soul       | Strikethrough and underline, flexibly                 |
-| subcaption | Form subfigures and subcaptions                       |
-| svg        | Insert SVG images                                     |
-| tikz       | Generally handy, as a dependancy and for graphics     |
-| tcolorbox  | Nice boxes for code                                   |
-| textcomp   | Font encodings                                        |
-| xcolor     | Colours                                               |
-| xparse     | Extended command/env definition forms                 |
-| xcoffins   | Manipulate coffins (boxes) for typesetting            |
+| Package     | Description                                           |
+|-------------+-------------------------------------------------------|
+| adjustbox   | Adjust general LaTeX material in like includegraphics |
+| accsupp     | Copy-paste text overlay for emoji images              |
+| amsmath     | A near-essential maths package                        |
+| booktabs    | Nice horizontal lines in tables                       |
+| cancel      | Cancel terms in equations                             |
+| capt-of     | Captions outside floats                               |
+| caption     | Finer control over captions                           |
+| cleveref    | Easy cross-referencing                                |
+| embedall    | Embed files in the document                           |
+| etoolbox    | Document hooks                                        |
+| float       | Floating environments                                 |
+| fontenc     | Font encodings                                        |
+| fvextra     | Enhanced verbatim environments                        |
+| graphicx    | An extended graphics package                          |
+| hanging     | Used by oc-csl                                        |
+| hyperref    | Links                                                 |
+| inputenc    | Input file encodings                                  |
+| longtable   | Multi-page tables                                     |
+| mathalpha   | Set extended math alphabet fonts                      |
+| mathtools   | Typesetting tools for maths                           |
+| microtype   | Microtypography                                       |
+| pdfx        | Create pdf/a- and pdf/x- compatible documents         |
+| pifont      | A collection of symbols                               |
+| pmboxdraw   | Good-looking box drawing characters                   |
+| preview     | Needed for AUCTeX and ob-latex                        |
+| scrbase     | KOMA classes and more                                 |
+| scrextend   | KOMA utilities                                        |
+| siunitx     | Proper unit support                                   |
+| soul        | Strikethrough and underline, flexibly                 |
+| subcaption  | Form subfigures and subcaptions                       |
+| svg         | Insert SVG images                                     |
+| tcolorbox   | Nice boxes for code                                   |
+| textcomp    | Font encodings                                        |
+| tikz        | Generally handy, as a dependancy and for graphics     |
+| transparent | Invisible text for emoji copying                      |
+| xcoffins    | Manipulate coffins (boxes) for typesetting            |
+| xcolor      | Colours                                               |
+| xparse      | Extended command/env definition forms                 |
 
 Then for the various fontsets:
 #+name: org-latex-font-packages-list
 + Alegreya
 + arev
++ arevmath
 + biolinum
 + FiraMono
 + FiraSans
@@ -14006,6 +14178,7 @@ Then for the various fontsets:
 + newtxtext
 + newtxsf
 + noto
++ notomath
 + plex-mono
 + plex-sans
 + plex-serif

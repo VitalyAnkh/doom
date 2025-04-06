@@ -17,6 +17,10 @@
 (remove-hook 'kill-emacs-hook #'org-persist-gc)
 (require 'ox-latex)
 
+(defmacro use-package! (&rest body)
+  `(use-package ,@body))
+(require 'config-ox-latex)
+
 (advice-add 'pdf-tools-install :around #'ignore)
 (advice-add 'pdf-info-features :around #'ignore)
 
@@ -46,7 +50,8 @@
         (org-export-coding-system 'utf-8)
         (org-export-with-broken-links t)
         (org-resource-download-policy t)
-        (org-persist-disable-when-emacs-Q nil)
+        (org-confirm-babel-evaluate nil)
+        (org-persist--disable-when-emacs-Q nil)
         org-mode-hook org-load-hook)
     (insert-file-contents (expand-file-name "config.org" config-root))
     (goto-char (point-max))
@@ -57,7 +62,13 @@
     (setq org-export-conditional-features
           (delq (rassq 'julia-code org-export-conditional-features)
                 org-export-conditional-features))
-    (org-latex-export-to-pdf)))
+    (condition-case err
+        (org-latex-export-to-pdf)
+      (error
+       (with-current-buffer "*Org PDF LaTeX Output*"
+         (message "LaTeX Output:\n==================\n%s\n==================\n"
+                  (buffer-string)))
+       (signal (car err) (cdr err))))))
 
 (publish "config.pdf")
 
