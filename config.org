@@ -1388,12 +1388,12 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (unpin! lsp-metals)
 (unpin! lsp-haskell)
 (unpin! lsp-java)
-(unpin! dirvish)
 (package! treemacs-nerd-icons :disable t)
 (unpin! treemacs)
 (unpin! lsp-treemacs)
 (unpin! treemacs-nerd-icons)
 (unpin! lsp-mode)
+;; (unpin! dirvish)
 ;; (package! org-xlatex :recipe
 ;;   (:host github :repo "ksqsf/org-xlatex" :files ("*.el" "*.html")))
 ;;(package! consult-recoll)
@@ -4188,12 +4188,17 @@ GitHub Copilot is awesome!
 
 #+begin_src emacs-lisp
 (use-package! gptel
-  :commands gptel gptel-menu gptel-mode gptel-send gptel-set-tpic
+  :commands gptel gptel-menu gptel-mode gptel-send gptel-set-topic
   :custom
   (gptel-temperature 0.2)
   :config
   (setq auth-sources '("~/.authinfo"))
   (setq gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev"))
+  (setq gptel-directives
+        `((default . nil)
+          ...
+          )
+        gptel--system-message nil)
   (let (ollama-models)
     (when (executable-find "ollama")
       (with-temp-buffer
@@ -4208,12 +4213,19 @@ GitHub Copilot is awesome!
                   gptel-api-key (auth-source-pick-first-password :host "gemini-vr.deno.dev")
                   ;; gptel-backend (gptel-make-ollama "Ollama" :models ollama-models :stream t)))
                   gptel-backend (gptel-make-openai "gemini-vr" :protocol "https" :host "gemini-vr.deno.dev" :endpoint "/v1/chat/completions"
-                  :models '("gemini-2.0-pro-exp")
-                  ;; :models '("gemini-2.0-pro-thinking-exp")
+                  :models '("gemini-2.5-pro-exp")
+                  ;; :models '("gemini-2.5-pro-thinking-exp")
                   :stream t
                   :key gptel-api-key
                   )
                   ))
+  ;; DeepSeek offers an OpenAI compatible API
+  (gptel-make-openai "DeepSeek"       ;Any name you want
+    :host "api.deepseek.com"
+    :endpoint "/chat/completions"
+    :stream t
+    :key "sk-fdsafs"               ;can be a function that returns the key
+    :models '(deepseek-r1 deepseek-v3))
   (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
   (setq gptel-default-mode #'org-mode))
@@ -5689,7 +5701,9 @@ Some lifesaver key bindings for ~Dirvish~ and ~Meow~. Doom doesn't add these key
   "Decrease font size by 4 levels in `dired-mode`."
   (interactive)
   (toggle-truncate-lines 1)
-  (text-scale-decrease 2))
+  (when window-system
+    (text-scale-decrease 2))
+  )
 
   ;; Add the function to `dired-mode-hook`.
   (add-hook 'dired-mode-hook #'vr-dired-font-decrease)
