@@ -8444,7 +8444,7 @@ Programming in Emacs relys on =LSP=: Language Server Protocol. But the lsp clien
   (lsp-inlay-hints-mode)
 
   :custom
-  (lsp-enable-file-watchers t)
+  (lsp-enable-file-watchers nil)
   (lsp-treemacs-sync-mode)
   (lsp-ui-doc-position "Bottom")
   (lsp-keep-workspace-alive t)
