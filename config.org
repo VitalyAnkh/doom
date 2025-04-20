@@ -1378,6 +1378,7 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (unpin! code-review)
 (unpin! ox-hugo)
 (unpin! dap-mode)
+(unpin! diff-hl)
 (package! multiple-cursors :disable t)
 (package! benchmark-init :recipe (:host github :repo "dholm/benchmark-init-el"))
 (package! org-pretty-tags)
