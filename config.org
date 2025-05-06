@@ -1871,10 +1871,10 @@ coq                        ; proofs-as-programs
 data                         ; config/data formats
 (dart +flutter)            ; paint ui and not much else
 ;;dhall                      ; JSON with FP sprinkles
-elixir                     ; erlang done right
+;; elixir                     ; erlang done right
 elm                        ; care for a cup of TEA?
 emacs-lisp                   ; drown in parentheses
-erlang                     ; an elegant language for a more civilized age
+;; erlang                     ; an elegant language for a more civilized age
 ess                          ; emacs speaks statistics
 ;;faust                      ; dsp, but you get to keep your soul
 ;;fsharp                     ; ML stands for Microsoft's Language
@@ -1899,7 +1899,7 @@ json                         ; At least it ain't XML
 ;;factor                     ; for when scripts are stacked against you
 ;;ledger                     ; an accounting system in Emacs
 lua                          ; one-based indices? one-based indices
-markdown                     ; writing docs for people to ignore
+(markdown +lsp +tree-sitter)                     ; writing docs for people to ignore
 ;;nim                        ; python + lisp at the speed of c
 (nix +lsp +tree-sitter)                          ; I hereby declare "nix geht mehr!"
 (ocaml +lsp +tree-sitter)                      ; an objective camel
@@ -1916,7 +1916,7 @@ markdown                     ; writing docs for people to ignore
 ;;php                        ; perl's insecure younger brother
 ;; plantuml                   ; diagrams for confusing people more
 ;;purescript                 ; javascript, but functional
-(python +lsp +pyright)       ; beautiful is better than ugly
+(python +lsp +pyright +tree-sitter)       ; beautiful is better than ugly
 (qt +lsp +tree-sitter)                         ; the 'cutest' gui framework ever
 (racket +lsp +tree-sitter)                    ; a DSL for DSLs
 (raku +lsp +tree-sitter)                      ; the artist formerly known as perl6
@@ -1933,8 +1933,8 @@ sh                           ; she sells {ba,z,fi}sh shells on the C xor
 ;;solidity                   ; do you need a blockchain? No.
 ;;swift                      ; who asked for emoji variables?
 ;;terra                      ; Earth and Moon in alignment for performance.
-web                          ; the tubes
-yaml                         ; JSON, but readable
+(web +lsp +tree-sitter)                          ; the tubes
+(yaml +lsp +tree-sitter)                         ; JSON, but readable
 (zig +lsp +tree-sitter)                        ; C, but simpler
 #+end_src
 
@@ -13959,12 +13959,12 @@ able to handle anyway. For them we define a table of LaTeX translations
 | γ         | \(\gamma\)       |
 | δ         | \(\delta\)       |
 | ε         | \(\epsilon\)       |
-| ϵ          | \(\varepsilon\)       |
+| ϵ         | \(\varepsilon\)       |
 | ζ         | \(\zeta\)       |
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι          | \(\iota\)        |
+| ι         | \(\iota\)       |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
