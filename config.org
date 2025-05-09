@@ -8461,24 +8461,27 @@ Programming in Emacs relys on =LSP=: Language Server Protocol. But the lsp clien
   (lsp-semantic-tokens-enable nil)
   (lsp-ui-doc-show-with-mouse t)
   (lsp-ui-doc-show-with-cursor nil)
+
   ;; lsp-rust-analyzer tweaks
   (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
   (lsp-rust-analyzer-display-chaining-hints t)
   (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t)
+  (lsp-rust-analyzer-binding-mode-hints t)
+  ;; (lsp-rust-analyzer-display-reborrow-hints t)
+
   (lsp-rust-analyzer-display-closure-return-type-hints t)
   (lsp-rust-analyzer-display-parameter-hints t)
-  (lsp-rust-analyzer-display-reborrow-hints t)
   (lsp-rust-analyzer-server-format-inlay-hints t)
+
   (lsp-rust-analyzer-closure-return-type-hints t)
   (lsp-rust-analyzer-discriminants-hints t)
-  (lsp-rust-analyzer-expression-adjustment-hints t)
-  (lsp-rust-analyzer-expression-adjustment-hints-mode)
+  ;; (lsp-rust-analyzer-expression-adjustment-hints t)
+  ;; (lsp-rust-analyzer-expression-adjustment-hints-mode)
+
   (lsp-rust-analyzer-closure-capture-hints t)
-  (lsp-rust-analyzer-binding-mode-hints t)
   (lsp-rust-analyzer-closing-brace-hints t)
   (lsp-rust-analyzer-closing-brace-hints-min-lines t)
   )
-
 #+end_src
 
 *** ffi-navigator
@@ -8700,12 +8703,6 @@ Meson is a great build tool for ~C~ and ~C++~, much more ergonomic than CMake.
 (use-package meson-mode
   :config
   (add-hook 'meson-mode-hook 'company-mode))
-;; (setq auto-mode-alist
-;;       (append
-;;        '(
-;;          ("\\meson.build\\'" . meson-mode)
-;;          )
-;;        auto-mode-alist))
 #+end_src
 
 ** LLVM Tools
