@@ -8577,6 +8577,7 @@ need to have a template assigned.
 (set-file-template! "\\.org$" :trigger "__" :mode 'org-mode)
 (set-file-template! "/LICEN[CS]E$" :trigger '+file-templates/insert-license)
 #+end_src
+
 ** Agda
 
 #+call: confpkg()
@@ -8589,6 +8590,19 @@ Doom Emacs doesn't auto load =agda-mode= for =.agda= and =.lagda.md= files. That
          ("\\.lagda.md\\'" . agda2-mode))
        auto-mode-alist))
 #+end_src
+** Nix
+
+#+call: confpkg()
+
+Use the official nix formatter.
+#+begin_src emacs-lisp
+(use-package lsp-nix
+  :after (lsp-mode)
+  :demand t
+  :custom
+  (lsp-nix-nil-formatter ["nixfmt"]))
+#+end_src
+
 ** CUDA Fortran
 
 #+call: confpkg()
@@ -13956,12 +13970,12 @@ able to handle anyway. For them we define a table of LaTeX translations
 | γ         | \(\gamma\)       |
 | δ         | \(\delta\)       |
 | ε         | \(\epsilon\)       |
-| ϵ         | \(\varepsilon\)       |
+| ϵ          | \(\varepsilon\)       |
 | ζ         | \(\zeta\)       |
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι         | \(\iota\)       |
+| ι          | \(\iota\)        |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
