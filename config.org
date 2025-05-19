@@ -1821,7 +1821,7 @@ vc                           ; version-control and Emacs, sitting in a tree
 biblio                       ; Writes a PhD for you (citation needed)
 ;;collab                     ; buffers with friends
 debugger                     ; FIXME stepping through code, to help you add bugs
-;;direnv                     ; be direct about your environment
+direnv                     ; be direct about your environment
 docker                       ; port everything to containers
 editorconfig               ; let someone else argue about tabs vs spaces
 ein                        ; tame Jupyter notebooks with emacs
@@ -1832,8 +1832,8 @@ ein                        ; tame Jupyter notebooks with emacs
  +docsets)                   ; ...or in Dash docsets locally
 lsp                          ; Language Server Protocol
 (magit                       ; a git porcelain for Emacs
- ;;+forge
- )                     ; interface with git forges
+ ;; +forge
+ )                           ; interface with git forges
 make                         ; run make tasks from Emacs
 ;;pass                       ; password manager for nerds
 pdf                          ; pdf enhancements
@@ -13970,12 +13970,12 @@ able to handle anyway. For them we define a table of LaTeX translations
 | γ         | \(\gamma\)       |
 | δ         | \(\delta\)       |
 | ε         | \(\epsilon\)       |
-| ϵ          | \(\varepsilon\)       |
+| ϵ         | \(\varepsilon\)       |
 | ζ         | \(\zeta\)       |
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι          | \(\iota\)        |
+| ι         | \(\iota\)       |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
