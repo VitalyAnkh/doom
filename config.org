@@ -1403,6 +1403,8 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 #+begin_src emacs-lisp :tangle config.el
 (setq tab-line-separator (propertize "▶" 'face  '(inherit 'tab-line-tab-inactive  :foreground  "SeaGreen3")))
 
+(setq system-time-locale "en_US.UTF-8")
+
 ;; TODO
 (setq org-latex-logfiles-extensions (quote ("lof" "lot" "tex~" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl")))
 
@@ -13970,12 +13972,12 @@ able to handle anyway. For them we define a table of LaTeX translations
 | γ         | \(\gamma\)       |
 | δ         | \(\delta\)       |
 | ε         | \(\epsilon\)       |
-| ϵ         | \(\varepsilon\)       |
+| ϵ          | \(\varepsilon\)       |
 | ζ         | \(\zeta\)       |
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι         | \(\iota\)       |
+| ι          | \(\iota\)        |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
