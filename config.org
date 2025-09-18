@@ -1362,7 +1362,6 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 (unpin! magit)
 (unpin! popwin)
 (unpin! ace-window)
-(unpin! persp-mode)
 (unpin! avy)
 (unpin! vertico)
 (unpin! closql)
@@ -8691,6 +8690,29 @@ Autoload =f90-mode= on =cuf= / =CUF= files.
 (package! clang-format+
   :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
 #+end_src
+** TypeScript
+
+#+call: confpkg()
+
+Use Apheleia from Doom's :editor (format +onsave) to format TypeScript/TSX and JavaScript/JSX with Biome.
+
+#+begin_src emacs-lisp :tangle config.el
+(after! apheleia
+  ;; Apheleia already defines a built-in `biome' formatter which uses
+  ;; the `apheleia-npx' helper to prefer project-local installs. We only
+  ;; need to remap modes from Prettier to Biome.
+
+  ;; Map TS/TSX modes to Biome
+  (setf (alist-get 'typescript-mode apheleia-mode-alist) 'biome)
+  (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'biome)
+  (setf (alist-get 'tsx-ts-mode apheleia-mode-alist) 'biome)
+
+  ;; Map JS/JSX modes to Biome
+  (setf (alist-get 'js-mode apheleia-mode-alist) 'biome)
+  (setf (alist-get 'js2-mode apheleia-mode-alist) 'biome)
+  (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'biome)
+  (setf (alist-get 'rjsx-mode apheleia-mode-alist) 'biome))
+#+end_src
 
 #+begin_src emacs-lisp :tangle config.el
 (use-package clang-format+
@@ -8706,6 +8728,8 @@ Autoload =f90-mode= on =cuf= / =CUF= files.
             c-mode
             f90-mode
             javascript-mode
+            typescript-mode
+            typescript-ts-mode
             org-msg-edit-mode ; doesn't need a formatter
             sh-mode))
 #+end_src
@@ -14037,12 +14061,12 @@ able to handle anyway. For them we define a table of LaTeX translations
 | γ         | \(\gamma\)       |
 | δ         | \(\delta\)       |
 | ε         | \(\epsilon\)       |
-| ϵ          | \(\varepsilon\)       |
+| ϵ         | \(\varepsilon\)       |
 | ζ         | \(\zeta\)       |
 | η         | \(\eta\)       |
 | θ         | \(\theta\)       |
 | ϑ         | \(\vartheta\)       |
-| ι          | \(\iota\)        |
+| ι         | \(\iota\)       |
 | κ         | \(\kappa\)       |
 | λ         | \(\lambda\)       |
 | μ         | \(\mu\)       |
