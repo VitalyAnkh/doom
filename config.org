@@ -1351,6 +1351,12 @@ This is a place I put workarounds. It should be empty in the best scenarios.
 
 #+begin_src emacs-lisp :tangle packages.el
 (package! separate-inline :recipe (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
+;; Doom declares this package before older local recipe repos know about it.
+(package! let-completion :recipe (:host github :repo "gggion/let-completion.el"))
+;; This upstream repository moved from master to main, but older checkouts keep a
+;; master-only fetchspec that breaks `doom sync -u`.
+(package! reformatter :recipe (:host github :repo "purcell/emacs-reformatter"
+                                :branch "main"))
 (unpin! yasnippet)
 (unpin! citar)
 (unpin! citar-org-roam)
@@ -1731,6 +1737,42 @@ have flags applied to tweak their behaviour.
 
 ;; This file controls what Doom modules are enabled and what order they load in.
 ;; Press 'K' on a module to view its documentation, and 'gd' to browse its directory.
+
+(defun vr/doom-tangle-confpkg-config-h ()
+  "Tangle this confpkg literate config before Doom's narrower tangle hook."
+  (unless (getenv "__NOTANGLE")
+    (let* ((config-file (expand-file-name "config.org" doom-user-dir))
+           (default-directory doom-user-dir))
+      (when (file-exists-p config-file)
+        (require 'compile nil t)
+        (unless (and (require 'org nil t)
+                     (require 'ob-tangle nil t))
+          (user-error "Unable to load Org tangle support"))
+        (let ((org-startup-indented nil)
+              (org-startup-folded nil)
+              (vc-handled-backends nil)
+              (write-file-functions nil)
+              (before-save-hook nil)
+              (after-save-hook nil)
+              (org-mode-hook nil)
+              (org-inhibit-startup t)
+              (org-confirm-babel-evaluate nil))
+          (message "Tangling confpkg literate config...")
+          (let ((files (org-babel-tangle-file config-file)))
+            (unless files
+              (user-error "Failed to tangle any blocks from %s" config-file))
+            (setenv "__NOTANGLE" "1")
+            (message "Tangled confpkg literate config (%d files)" (length files))))))))
+
+(add-hook 'doom-before-sync-hook #'vr/doom-tangle-confpkg-config-h -100)
+
+(with-eval-after-load 'consult
+  ;; Doom's Vertico module still customizes the older public source names, while
+  ;; current Consult exposes these buffer sources under internal `consult--...`
+  ;; names.  Keep the old names bound before Doom runs `consult-customize`.
+  (defvar consult-source-bookmark consult--source-bookmark)
+  (defvar consult-source-recent-file consult--source-recent-file)
+  (defvar consult-source-project-recent-file consult--source-project-recent-file))
 
 (doom! :input
        <<doom-input>>
@@ -5627,7 +5669,8 @@ appealing, and Steve Purcell has been nice enough to make a package to display
 these as horizontal rules.
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! page-break-lines :recipe (:host github :repo "purcell/page-break-lines"))
+(package! page-break-lines :recipe (:host github :repo "purcell/page-break-lines"
+                                    :branch "main"))
 #+end_src
 
 We can go from "better" to "where has this been all my life?" by now making page
@@ -15231,6 +15274,256 @@ Graphviz is a nice method of visualising simple graphs, based on plaintext
   (after! org
     (setcdr (assoc "dot" org-src-lang-modes)
             'graphviz-dot)))
+#+end_src
+
+** Typst
+
+#+call: confpkg()
+
+Typst is a modern typesetting system. We use =typst-ts-mode= (tree-sitter) for
+=.typ= files.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! typst-ts-mode
+  :recipe (:host nil :repo "https://git.sr.ht/~meow_king/typst-ts-mode"))
+
+(package! outline-indent-mode
+  :recipe (:host nil :repo "https://git.sr.ht/~meow_king/outline-indent-mode"))
+
+(package! tip
+  :recipe (:host nil :repo "https://git.sr.ht/~mafty/tip"))
+
+(package! typst-preview
+  :recipe (:host github :repo "havarddj/typst-preview.el"))
+
+(package! ox-typst
+  :recipe (:host github :repo "jmpunkt/ox-typst"))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! typst-ts-mode
+  :defer t
+  :init
+  (defun vr/typst-tree-sitter-dir ()
+    "Return the Doom-local directory for tree-sitter grammars."
+    (expand-file-name "tree-sitter" doom-local-dir))
+
+  (defun vr/typst-grammar-library-file ()
+    "Return the Typst tree-sitter grammar shared library if present."
+    (car (file-expand-wildcards
+          (expand-file-name "libtree-sitter-typst.*" (vr/typst-tree-sitter-dir)))))
+
+  (defun vr/typst-install-tree-sitter-grammar ()
+    "Install the Typst tree-sitter grammar into Doom's local directory."
+    (interactive)
+    (require 'treesit)
+    (let ((install-dir (vr/typst-tree-sitter-dir))
+          (treesit-language-source-alist (copy-sequence treesit-language-source-alist)))
+      (add-to-list 'treesit-language-source-alist
+                   '(typst "https://github.com/Ziqi-Yang/tree-sitter-typst"))
+      (make-directory install-dir t)
+      (treesit-install-language-grammar 'typst install-dir)
+      (add-to-list 'treesit-extra-load-path install-dir)
+      (require 'typst-ts-mode)
+      (setq typst-ts-mode-grammar-location (vr/typst-grammar-library-file))
+      (message "Installed Typst tree-sitter grammar into %s" install-dir)))
+
+  (defun vr/typst-mode ()
+    "Major mode for Typst files with a graceful fallback.
+Uses `typst-ts-mode` when the Typst tree-sitter grammar is available; otherwise
+falls back to `text-mode`."
+    (interactive)
+    (require 'treesit)
+    (if (treesit-ready-p 'typst)
+        (typst-ts-mode)
+      (text-mode)
+      (message "Typst tree-sitter grammar isn't installed. Run M-x vr/typst-install-tree-sitter-grammar")))
+
+  (add-to-list 'auto-mode-alist '("\\.typ\\'" . vr/typst-mode))
+
+  (after! treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(typst "https://github.com/Ziqi-Yang/tree-sitter-typst"))
+    (add-to-list 'treesit-extra-load-path (vr/typst-tree-sitter-dir)))
+
+  :config
+  (setq typst-ts-watch-options "--open")
+  (setq typst-ts-mode-grammar-location (or typst-ts-mode-grammar-location
+                                           (vr/typst-grammar-library-file)))
+  (setq typst-ts-lsp-download-path
+        (expand-file-name "lsp/tinymist/tinymist" doom-cache-dir))
+
+  (map! :map typst-ts-mode-map
+        :localleader
+        :desc "Watch" "w" #'typst-ts-watch-mode
+        :desc "Compile" "c" #'typst-ts-compile
+        :desc "Preview" "p" #'typst-ts-preview)
+
+  (defvar vr/typst-watch-compiled-hook nil
+    "Hook run when typst watch reports a compilation event.")
+
+  (defadvice! vr/typst-ts--watch-process-filter-run-hook-a (_proc output)
+    :after #'typst-ts--watch-process-filter
+    (when (string-match-p (rx "compiled") output)
+      (run-hooks 'vr/typst-watch-compiled-hook)))
+
+  (defun vr/typst-revert-related-pdfs-h (&rest _)
+    "Revert visible PDF buffers that correspond to a Typst source file."
+    (walk-windows
+     (lambda (window)
+       (with-selected-window window
+         (when-let ((pdf (buffer-file-name)))
+           (when (and (string-match-p (rx ".pdf" eos) pdf)
+                      (file-exists-p (concat (file-name-sans-extension pdf) ".typ"))
+                      (not (buffer-modified-p))
+                      (not (file-remote-p pdf)))
+             (revert-buffer nil t)))))
+     nil
+     'visible))
+
+  (add-hook 'typst-ts-compile-after-compilation-hook #'vr/typst-revert-related-pdfs-h)
+  (add-hook 'vr/typst-watch-compiled-hook #'vr/typst-revert-related-pdfs-h)
+
+  (after! dtrt-indent
+    (add-to-list 'dtrt-indent-hook-mapping-list
+                 '(typst-ts-mode default typst-ts-mode-indent-offset)))
+  (after! editorconfig
+    (add-to-list 'editorconfig-indentation-alist
+                 '(typst-ts-mode typst-ts-mode-indent-offset)))
+  (after! lsp-mode
+    (add-to-list 'lsp--formatting-indent-alist
+                 '(typst-ts-mode . typst-ts-mode-indent-offset))
+    (when (executable-find "tinymist")
+      (add-to-list 'lsp-language-id-configuration '(typst-ts-mode . "typst"))
+      (lsp-register-client
+       (make-lsp-client :new-connection (lsp-stdio-connection "tinymist")
+                        :activation-fn (lsp-activate-on "typst")
+                        :major-modes '(typst-ts-mode)
+                        :server-id 'tinymist))
+      (add-hook 'typst-ts-mode-hook #'lsp-deferred)))
+
+  (after! smartparens
+    (defun vr/typst-sp-in-math-p (_id _action _context)
+      "Return non-nil if point is inside a Typst math/formula node."
+      (when (derived-mode-p 'typst-ts-mode)
+        (catch 'in-math
+          (let ((node (treesit-node-at (point))))
+            (while node
+              (when (member (treesit-node-type node) '("math" "formula"))
+                (throw 'in-math t))
+              (setq node (treesit-node-parent node))))
+          nil)))
+
+    ;; https://typst.app/docs/reference/syntax/
+    (sp-with-modes 'typst-ts-mode
+      (sp-local-pair "+" "+" :actions '() :when nil)
+      (sp-local-pair "|" "|" :actions '() :when nil)
+      (sp-local-pair "<" ">" :actions '(:add wrap autoskip) :when nil)
+      (sp-local-pair "=" "=" :actions '() :when nil)
+      (sp-local-pair "/" "/" :actions '() :when nil)
+      (sp-local-pair "~" "~" :actions '() :when nil)
+      (sp-local-pair "*" "*" :actions '(:add insert wrap autoskip navigate) :when nil
+                     :unless (list #'vr/typst-sp-in-math-p
+                                   #'sp-point-after-word-p
+                                   #'sp-point-before-word-p))
+      (sp-local-pair "_" "_" :actions '(:add insert wrap autoskip navigate) :when nil
+                     :unless (list #'vr/typst-sp-in-math-p
+                                   #'sp-point-after-word-p
+                                   #'sp-point-before-word-p))
+      (sp-local-pair "`" "`" :actions '(:add insert wrap autoskip navigate) :when nil
+                     :unless (list #'vr/typst-sp-in-math-p))
+      (sp-local-pair "$" "$" :actions '(:add insert wrap autoskip navigate) :when nil))))
+
+(after! apheleia
+  (setf (alist-get 'typstyle apheleia-formatters) '("typstyle"))
+  (when (executable-find "typstyle")
+    (setf (alist-get 'typst-ts-mode apheleia-mode-alist) 'typstyle)))
+
+(use-package! outline-indent-mode
+  :defer t
+  :commands (outline-indent-mode)
+  :init
+  (setq outline-indent-indentation-per-level 2)
+  :hook (typst-ts-mode . outline-indent-mode))
+
+(use-package! tip
+  :defer t
+  :commands (tip-mode
+             tip-send-nbd
+             tip-send-all
+             tip-clear-all
+             tip-ensure
+             tip-live-setup
+             tip-live-teardown
+             tip-update-preamble
+             tip-open)
+  :init
+  (defun vr/tip-server-default-basedir ()
+    "Return a Doom-local default directory for tip-server-py."
+    (expand-file-name "tip-server-py" doom-local-dir))
+
+  (defun vr/tip-ensure (&optional force)
+    "Start `tip' server if it looks installed in Doom-local state.
+
+`tip' requires an external python jsonrpc server (=tip-server-py=). This command
+expects it under `doom-local-dir` as `tip-server-py/`."
+    (interactive "P")
+    (require 'tip)
+    (setq tip-server-basedir (vr/tip-server-default-basedir))
+    (cond
+     ((not (file-directory-p tip-server-basedir))
+      (user-error "tip-server-py not found at %s (see upstream tip README)" tip-server-basedir))
+     ((not (file-exists-p (expand-file-name "main.py" tip-server-basedir)))
+      (user-error "tip-server-py main.py not found in %s" tip-server-basedir))
+     (t
+      (tip-ensure force))))
+
+  :config
+  ;; Upstream tip currently stores the server process in an inconsistent variable
+  ;; name. Keep tip usable without patching the package itself.
+  (defadvice! vr/tip--start-server-store-process-a (orig-fn buf port)
+    :around #'tip--start-server
+    (let ((proc (funcall orig-fn buf port)))
+      (setq tip--server-process proc)
+      proc))
+
+  (map! :map typst-ts-mode-map
+        :localleader
+        (:prefix ("i" . "inline preview")
+         :desc "Toggle tip" "i" #'tip-mode
+         :desc "Ensure server" "s" #'vr/tip-ensure
+         :desc "Render window" "r" #'tip-send-nbd
+         :desc "Render buffer" "R" #'tip-send-all
+         :desc "Clear all" "c" #'tip-clear-all
+         :desc "Open overlay" "o" #'tip-open
+         :desc "Update preamble" "p" #'tip-update-preamble
+         :desc "Live setup" "l" #'tip-live-setup
+         :desc "Live teardown" "L" #'tip-live-teardown)))
+
+(use-package! typst-preview
+  :defer t
+  :commands (typst-preview-mode
+             typst-preview-start
+             typst-preview-stop
+             typst-preview-restart
+             typst-preview-send-position)
+  :init
+  (setq typst-preview-executable "tinymist"
+        typst-preview-browser "default"
+        typst-preview-autostart t
+        typst-preview-open-browser-automatically t)
+  :config
+  (map! :map typst-ts-mode-map
+        :localleader
+        (:prefix ("P" . "typst-preview")
+         :desc "Toggle mode" "p" #'typst-preview-mode
+         :desc "Start" "s" #'typst-preview-start
+         :desc "Stop" "S" #'typst-preview-stop
+         :desc "Restart" "r" #'typst-preview-restart
+         :desc "Send position" "j" #'typst-preview-send-position)))
+
+(use-package! ox-typst
+  :after ox)
 #+end_src
 
 ** Markdown

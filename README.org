@@ -31,3 +31,86 @@ echo "(doom! :config literate)" > ~/.config/doom/init.el
 git clone --depth 1 https://github.com/hlissner/doom-emacs ~/.emacs.d
 ~/.emacs.d/bin/doom install; ~/.emacs.d/bin/doom sync; ~/.config/doom/setup.sh
 #+end_src
+
+* NixOS: reliable direct =doom sync= in this repo
+
+This config uses a custom literate generation flow (=confpkg=) from =config.org=.
+On some Doom flows, built-in literate tangling can clear =subconf/*.el= before
+failing, which then breaks =doom sync=.
+
+This repo now handles that in the Doom config itself: an early
+=doom-before-sync-hook= performs a full =config.org= tangle, then skips Doom's
+narrower retangle for that sync process. The normal Doom CLI is the supported
+entrypoint.
+
+#+begin_src shell
+doom sync
+#+end_src
+
+With update:
+
+#+begin_src shell
+doom sync -u
+#+end_src
+
+Note: =sync -u= is network/upstream dependent and can fail if a straight repo in
+Doom's local straight checkout is in a bad git state. Preserve local package
+checkout changes; stash or inspect them instead of discarding them.
+
+If you want a pinned toolchain on NixOS (recommended for fresh machines):
+
+#+begin_src shell
+nix develop -c doom sync
+#+end_src
+
+Generated local state:
+- Doom package/build/cache state lives under Doom's =doom-local-dir= (normally
+  =~/.config/emacs/.local/=, unless =DOOMLOCALDIR= is set).
+- =./subconf/= contains generated per-section config files from this repo's
+  =confpkg= tangle flow.
+
+Typst support:
+- Package: =typst-ts-mode= (tree-sitter major mode)
+- =.typ= files use =vr/typst-mode=, which falls back to =text-mode= if the Typst
+  tree-sitter grammar isn't installed yet.
+- Enhancements:
+  - =outline-indent-mode= is enabled in =typst-ts-mode= buffers (Org-like virtual indentation).
+  - =tip= provides inline math previews (requires external =tip-server-py=; this config expects it under =doom-local-dir/tip-server-py/=).
+  - =typst-preview= provides live preview using =tinymist preview= (requires =tinymist= in =PATH=).
+  - =typstyle= is used as a formatter via Doom's =apheleia= integration (requires =typstyle= in =PATH=).
+  - =ox-typst= enables Org → Typst export (available via =org-export-dispatch= with the =y= prefix).
+- In =typst-ts-mode=, localleader (=SPC m=) bindings:
+  - =w=: toggle watch (=typst watch=)
+  - =c=: compile (=typst compile=)
+  - =p=: preview compiled PDF
+  - =i=: inline preview (tip)
+    - =i=: toggle =tip-mode=
+    - =s=: start/ensure server (=tip-ensure=)
+    - =r=: render visible window (=tip-send-nbd=)
+    - =R=: render whole buffer (=tip-send-all=)
+  - =P=: typst-preview
+    - =p=: toggle =typst-preview-mode=
+    - =s=: start (=typst-preview-start=)
+    - =S=: stop (=typst-preview-stop=)
+    - =r=: restart (=typst-preview-restart=)
+    - =j=: send position (=typst-preview-send-position=)
+- To install the grammar into =doom-local-dir/tree-sitter/=, run:
+
+#+begin_src
+M-x vr/typst-install-tree-sitter-grammar
+#+end_src
+
+On NixOS, the easiest way to ensure a compiler is available for grammar
+installation (and have =typst= / =tinymist= in =PATH=) is to run Emacs inside
+the devShell:
+
+#+begin_src shell
+nix develop -c emacs
+#+end_src
+
+Cleanup for a fresh generated-config retry:
+
+#+begin_src shell
+rm -rf subconf/*
+doom sync
+#+end_src
