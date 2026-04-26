@@ -76,6 +76,23 @@ future work in this tree.
   fail before reaching the Consult phase. Reproduce upstream behavior in a temp
   `DOOMDIR` instead of modifying the upstream checkout.
 
+## Teco Merge Policy
+
+- When merging Teco upstream, preserve upstream feature/content changes by
+  default, then reapply local compatibility customizations deliberately.
+- Do not resolve conflicts by taking only "ours" or only "theirs" for
+  `config.org`. Inspect each hunk and keep both the upstream intent and the local
+  runtime constraints where possible.
+- Local customizations that must be rechecked after every Teco merge:
+  - direct `doom sync` support through the full-tangle `doom-before-sync-hook`;
+  - Consult public-source compatibility aliases;
+  - local recipe workarounds for packages/branches;
+  - Nix devShell tooling;
+  - Typst integration and `vr/` helper naming;
+  - default local theme preference where it interacts with upstream theme logic.
+- After a merge, verify direct `doom sync`, direct `doom sync -u` when package
+  recipes or pins changed, and `emacs --debug-init -nw`.
+
 ## Verification Habits
 
 - Record real command output and exit codes in `progress.md` and distilled
