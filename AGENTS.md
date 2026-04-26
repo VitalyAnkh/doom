@@ -90,6 +90,9 @@ future work in this tree.
   - Nix devShell tooling;
   - Typst integration and `vr/` helper naming;
   - default local theme preference where it interacts with upstream theme logic.
+- If Teco updates `:pin` values for a package that is intentionally unpinned in
+  this fork, keep it unpinned. The local default is to follow latest package
+  versions unless a pin/workaround is explicitly required.
 - After a merge, verify direct `doom sync`, direct `doom sync -u` when package
   recipes or pins changed, and `emacs --debug-init -nw`.
 
