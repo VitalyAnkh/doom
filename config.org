@@ -2308,22 +2308,24 @@ listing the missing fonts should appear for at least half a second.
 
 **** Theme
 
-The ~doom-one~ theme is nice and all, but I find the ~vibrant~ variant nicer. With
-the light themes, I use ~doom-one-light~ locally. I'd like to pick the default
-from them based on the system theme, so let's record both preferences.
+The ~doom-one~ theme is nice and all, but I want this configuration to stay on a
+light theme regardless of the system theme. We still keep the light/dark
+preference variables so upstream's adaptive theme helpers have something to
+consult, but both sides intentionally resolve to ~doom-one-light~ locally.
 
 #+begin_src emacs-lisp
 (defvar doom-theme-light 'doom-one-light
   "The theme to use on light-mode systems.")
-(defvar doom-theme-dark 'doom-vibrant
+(defvar doom-theme-dark 'doom-one-light
   "The theme to use on dark-mode systems.")
 #+end_src
 
 First though, let's see if the =DOOM_THEME= environment variable is set, and use
-that (falling back on the local light theme).
+that for explicit temporary overrides. Otherwise, local preference wins and the
+startup theme stays light.
 
 #+begin_src emacs-lisp
-(setq doom-theme ; Set according to the env var or system-dependent default
+(setq doom-theme ; Set according to the env var or local light default
       (let ((env-theme (getenv "DOOM_THEME")))
         (if env-theme
             (intern env-theme) ; Note: `intern-soft' doesn't work here
