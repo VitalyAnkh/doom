@@ -517,7 +517,7 @@ modify the parent heading, and register the config group with the variables we
 created earlier.
 
 #+name: confpkg
-#+begin_src elisp :var name="" needs="" after="" pre="" prefix="config-" via="copy" emacs-minimum="29.1" :results silent raw :noweb no-export
+#+begin_src elisp :var name="" needs="" after="" pre="" prefix="config-" via="copy" emacs-minimum="29.1" :results raw replace :noweb no-export
 ;; Babel block for use with #+call
 ;; Arguments:
 ;;  - name, the name of the config sub-package
@@ -622,7 +622,7 @@ Now all that's needed is a template to be used.
 
 <<%p>>
 
-(provide '%p)
+(provide (quote %p))
 ;;; %p.el ends here
 #+end_src
 
@@ -818,7 +818,10 @@ tempbuffer. We can call this with the finalising step.
                  (re-search-forward "^;;; Code:\n+")
                  (progn
                    (goto-char (point-max))
-                   (re-search-backward (format "[^\n\t ][\n\t ]*\n[\t ]*(provide '%s)" (plist-get confpkg :package)))
+                   (let ((package (regexp-quote (plist-get confpkg :package))))
+                     (re-search-backward
+                      (format "[^\n\t ][\n\t ]*\n[\t ]*(provide[ \t\n]+\\(?:'%s\\|(quote[ \t\n]+%s)\\))"
+                              package package)))
                    (match-end 0))))
                ((eq 'require (plist-get confpkg :via))
                 (insert (format "(require '%s)\n" (plist-get confpkg :package))))
